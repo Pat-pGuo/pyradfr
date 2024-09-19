@@ -4,42 +4,55 @@ from tests.frparser.frtestparser import ParseError, TestCaseParser
 
 test_case_file_dir = ''
 
-
-class TestFrTestCases(unittest.TestCase):
-    def setUp(self):
-        self.previous_result = None
+class ContextManager:
+    def __init__(self):
         self.parser = TestCaseParser()
+        self.previous_result = None
 
-    def tearDown(self):
+    def reset_previous_result(self):
         self.previous_result = None
 
     def get_previous_result(self):
-        return self.previous_result
+        pass
+
+    def parse_file(self, file):
+        with open(file, 'r') as file_open:
+            for line_num, line_content in enumerate(file_open):
+                try:
+                    self.parse_line(line_content)
+                except ParseError as e:
+                    print(f'Encountered Parse Error in file {file} on line'
+                          f' {line_num + 1}. Error: {e}')
+
+    def parse_line(self, line_content):
+        test_case = self.parser.start(line_content, self.get_previous_result)
+        if test_case:
+            cmd, data = test_case['testcase']
+            match cmd:
+                case 'encode-pair':
+                    self.test_encode_pair(data)
+                case 'decode-pair':
+                    self.test_decode_pair(data)
+                case 'match':
+                    self.test_match(data)
+
+    def test_encode_pair(self, data):
+        pass
+
+    def test_decode_pair(self, data):
+        pass
+
+    def test_match(self, data):
+        pass
+
+
+class TestFrTestCases(unittest.TestCase):
+    def setUp(self):
+        self.context_manager = ContextManager()
+
+    def tearDown(self):
+        pass
 
     def test_all_fr_test_cases(self):
         for test_case_file in os.listdir(test_case_file_dir):
-            with open(test_case_file, 'r') as file_open:
-                for line_num, line_content in enumerate(file_open):
-                    try:
-                        test_case = self.parser.start(line_content, self.get_previous_result)
-                        if test_case is not None:
-                            cmd, data = test_case['testcase']
-                            match cmd:
-                                case 'encode-pair':
-                                    for pair in data:
-                                        attr_name, attr_value = pair
-
-                                        # test case with these data
-                                        print(attr_name, attr_value)
-                                case 'decode-pair':
-
-                                    # test case with these data
-                                    print(data)
-                                case 'match':
-
-                                    # test case with these data
-                                    print(data)
-                    except ParseError as e:
-                        print(
-                            f'Encountered Parse Error in file {test_case_file}'
-                            f' on line {line_num + 1}. Error: {e}')
+            self.context_manager.parse_file(test_case_file)
