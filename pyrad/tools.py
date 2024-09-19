@@ -38,6 +38,11 @@ def EncodeOctets(octetstring):
 
     return encoded_octets
 
+def EncodeIPv4Prefix(addr):
+    if not isinstance(addr, str):
+        raise TypeError('Address has to be a string')
+    network = IPv4Network(addr)
+    return struct.pack('2B', *[0, network.prefixlen]) + network.network_address.packed
 
 def EncodeAddress(addr):
     if not isinstance(addr, str):
@@ -137,6 +142,13 @@ def EncodeAscendBinary(orig_str):
     return result
 
 
+def EncodeInteger16(num, format='!H'):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer16')
+    return struct.pack(format, num)
+
 def EncodeInteger(num, format='!I'):
     try:
         num = int(num)
@@ -158,6 +170,11 @@ def EncodeDate(num):
         raise TypeError('Can not encode non-integer as date')
     return struct.pack('!I', num)
 
+def EncodeEther(addr):
+    return struct.pack('6H', *map(lambda x: int(x, 16), (addr.split(':'))))
+
+def EncodeIfid(addr):
+    return struct.pack('8H', *map(lambda x: int(x, 16), (addr.split(':'))))
 
 def DecodeString(orig_str):
     return orig_str.decode('utf-8')
@@ -166,6 +183,15 @@ def DecodeString(orig_str):
 def DecodeOctets(orig_bytes):
     return orig_bytes
 
+def DecodeComboIp(addr):
+    if len(addr) == 4:
+        return DecodeAddress(addr)
+    return DecodeIPv6Address(addr)
+
+def DecodeIPv4Prefix(addr):
+    addr = addr + b'\x00' * (6-len(addr))
+    _, length, prefix = '.'.join(map('{0:x}'.format, struct.unpack('!BB' + 'B'*4, addr))).split('.', 2)
+    return str(IPv4Network("%s/%s" % (prefix, int(length, 16))))
 
 def DecodeAddress(addr):
     return '.'.join(map(str, struct.unpack('BBBB', addr)))
@@ -186,6 +212,8 @@ def DecodeIPv6Address(addr):
 def DecodeAscendBinary(orig_bytes):
     return orig_bytes
 
+def DecodeInteger16(num, format='!H'):
+    return (struct.unpack(format, num))[0]
 
 def DecodeInteger(num, format='!I'):
     return (struct.unpack(format, num))[0]
@@ -196,13 +224,18 @@ def DecodeInteger64(num, format='!Q'):
 def DecodeDate(num):
     return (struct.unpack('!I', num))[0]
 
+def DecodeEther(addr):
+    return ':'.join(map('{0:02x}'.format, struct.unpack('H'*6, addr))).upper()
+
+def DecodeIfid(addr):
+    return ':'.join(map('{0:02x}'.format, struct.unpack('H'*8, addr))).upper()
 
 def EncodeAttr(datatype, value):
-    if datatype == 'string':
+    if datatype.lower() == 'string':
         return EncodeString(value)
-    elif datatype == 'octets':
+    elif 'octets' in datatype:
         return EncodeOctets(value)
-    elif datatype == 'integer':
+    elif datatype == 'integer' or datatype == 'uint32':
         return EncodeInteger(value)
     elif datatype == 'ipaddr':
         return EncodeAddress(value)
@@ -222,16 +255,25 @@ def EncodeAttr(datatype, value):
         return EncodeDate(value)
     elif datatype == 'integer64':
         return EncodeInteger64(value)
+    elif datatype == 'combo-ip':
+        if len(value.split('.')) == 4:
+            return EncodeAddress(value)
+    elif datatype == 'ipv4prefix':
+        return EncodeIPv4Prefix(value)
+    elif datatype == 'ether':
+        return EncodeEther(value)
+    elif datatype == 'ifid':
+        return EncodeIfid(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
 
 def DecodeAttr(datatype, value):
-    if datatype == 'string':
+    if datatype.lower() == 'string':
         return DecodeString(value)
-    elif datatype == 'octets':
+    elif 'octets' in datatype:
         return DecodeOctets(value)
-    elif datatype == 'integer':
+    elif datatype == 'integer' or datatype == 'uint32':
         return DecodeInteger(value)
     elif datatype == 'ipaddr':
         return DecodeAddress(value)
@@ -251,5 +293,15 @@ def DecodeAttr(datatype, value):
         return DecodeDate(value)
     elif datatype == 'integer64':
         return DecodeInteger64(value)
+    elif datatype == 'combo-ip':
+        if len(value) == '4':
+            return DecodeAddress(value)
+        return DecodeIPv6Address(value)
+    elif datatype == 'ipv4prefix':
+        return DecodeIPv4Prefix(value)
+    elif datatype == 'ether':
+        return DecodeEther(value)
+    elif datatype == 'ifid':
+        return DecodeIfid(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)

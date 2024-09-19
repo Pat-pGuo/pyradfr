@@ -41,6 +41,8 @@ The datatypes currently supported are:
 +---------------+----------------------------------------------+
 | octets        | arbitrary binary data                        |
 +---------------+----------------------------------------------+
+| octets[LEN]   | arbinrary binary data with fixed length      |
++---------------+----------------------------------------------+
 | abinary       | ascend binary data                           |
 +---------------+----------------------------------------------+
 | ipv6addr      | 16 octets in network byte order              |
@@ -59,17 +61,21 @@ The datatypes currently supported are:
 +---------------+----------------------------------------------+
 | integer64     | 64 bits unsigned number                      |
 +---------------+----------------------------------------------+
-
-These datatypes are parsed but not supported:
-
+| combo-ip      | 4 (IPv4) or 16 (IPv6) octets in network byte |
+|               | order                                        |
 +---------------+----------------------------------------------+
-| type          | description                                  |
-+===============+==============================================+
-| ifid          | 8 octets in network byte order               |
+| ipv4prefix    | 6 octets in network byte order               |                                       |
 +---------------+----------------------------------------------+
 | ether         | 6 octets of hh:hh:hh:hh:hh:hh                |
 |               | where 'h' is hex digits, upper or lowercase. |
 +---------------+----------------------------------------------+
+| ifid          | 8 octets in network byte order               |
++---------------+----------------------------------------------+
+
+These datatypes are parsed but not supported:
++---------------+----------------------------------------------+
+| type          | description                                  |
++===============+==============================================+
 """
 from pyrad import bidict
 from pyrad import tools
@@ -82,7 +88,12 @@ __docformat__ = 'epytext en'
 
 DATATYPES = frozenset(['string', 'ipaddr', 'integer', 'date', 'octets',
                        'abinary', 'ipv6addr', 'ipv6prefix', 'short', 'byte',
-                       'signed', 'ifid', 'ether', 'tlv', 'integer64'])
+                       'signed', 'ifid', 'ether', 'tlv', 'integer64',
+                       'combo-ip', 'ipv4prefix', 'ether', 'ifid', 'octets[14]',
+                       'octets[16]', 'octets[24]', 'octets[2]', 'octets[3]',
+                       'octets[50]', 'octets[68]', 'octets[70]', 'octets[84]',
+                       'octets[8]', 'uint32', 'vsa', 'extended', 'long-extended',
+                       'evs', 'String'])
 
 
 class ParseError(Exception):
