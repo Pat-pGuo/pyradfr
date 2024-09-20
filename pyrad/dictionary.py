@@ -92,7 +92,8 @@ DATATYPES = frozenset(['string', 'ipaddr', 'integer', 'date', 'octets',
                        'signed', 'ifid', 'ether', 'tlv', 'integer64',
                        'combo-ip', 'ipv4prefix', 'uint32',
                        'vsa', 'extended', 'long-extended', 'evs', 'String',
-                       'float32', 'int64', 'uint8', 'uint64', 'bool'])
+                       'float32', 'int64', 'uint8', 'uint64', 'bool',
+                       'group', 'uint16', 'time_delta'])
 
 
 class ParseError(Exception):
@@ -227,9 +228,10 @@ class Dictionary(object):
                         # ignore attributes with concat (freeradius compat.)
                         return None
                     else:
-                        raise ParseError('Unknown vendor ' + vendor,
-                                         file=state['file'],
-                                         line=state['line'])
+                        vendor = None # TODO :: Add parsing for attribute attributes
+                        # raise ParseError('Unknown vendor ' + vendor,
+                        #                  file=state['file'],
+                        #                  line=state['line'])
 
         (attribute, code, datatype) = tokens[1:4]
 
@@ -238,7 +240,9 @@ class Dictionary(object):
         # Codes can be sent as hex, or octal or decimal string representations.
         tmp = []
         for c in codes:
-          if c.startswith('0x'):
+          if not c: # TODO :: add parsing for implicit parent codes
+            pass
+          elif c.startswith('0x'):
             tmp.append(int(c, 16))
           elif c.startswith('0o'):
             tmp.append(int(c, 8))
@@ -247,14 +251,8 @@ class Dictionary(object):
         codes = tmp
 
         is_sub_attribute = (len(codes) > 1)
-        if len(codes) == 2:
-            code = int(codes[1])
-            parent_code = int(codes[0])
-        elif len(codes) == 1:
-            code = int(codes[0])
-            parent_code = None
-        else:
-            raise ParseError('nested tlvs are not supported')
+        code = int(codes[-1])
+        parent_codes = [c for c in codes[:-1]]
 
         datatype = datatype.split("[")[0]
 
@@ -265,24 +263,35 @@ class Dictionary(object):
                              line=state['line'])
         if vendor:
             if is_sub_attribute:
-                key = (self.vendors.GetForward(vendor), parent_code, code)
+                key = (self.vendors.GetForward(vendor), tuple(parent_codes), code)
             else:
                 key = (self.vendors.GetForward(vendor), code)
         else:
             if is_sub_attribute:
-                key = (parent_code, code)
+                key = (tuple(parent_codes), code)
             else:
                 key = code
 
         self.attrindex.Add(attribute, key)
         self.attributes[attribute] = Attribute(attribute, code, datatype, is_sub_attribute, vendor, encrypt=encrypt, has_tag=has_tag)
-        if datatype == 'tlv':
+        if datatype == 'tlv' or datatype == 'evs':
             # save attribute in tlvs
             state['tlvs'][code] = self.attributes[attribute]
-        if is_sub_attribute:
-            # save sub attribute in parent tlv and update their parent field
-            state['tlvs'][parent_code].sub_attributes[code] = attribute
-            self.attributes[attribute].parent = state['tlvs'][parent_code]
+        self.__HandleTlv(state, code, parent_codes, attribute, key)
+
+    def __HandleTlv(self, state, code, parent_codes, attribute, key):
+        state['tlvs'][code] = self.attributes[attribute]
+
+        if len(parent_codes) == 1:
+            state['tlvs'][parent_codes[0]].sub_attributes[key] = attribute
+            self.attributes[attribute].parent = state['tlvs'][parent_codes[0]]
+            return state['tlvs'][parent_codes[0]]
+
+        elif len(parent_codes) > 1:
+            child_attribute = self.__HandleTlv(state, code, parent_codes[1:], attribute, key)
+            state['tlvs'][parent_codes[0]].sub_attributes[parent_codes[1]] = child_attribute
+            child_attribute.parent = state['tlvs'][parent_codes[0]]
+            return state['tlvs'][parent_codes[0]]
 
     def __ParseValue(self, state, tokens, defer):
         if len(tokens) != 4:
@@ -324,12 +333,20 @@ class Dictionary(object):
                         file=state['file'],
                         line=state['line'])
             try:
-                (t, l) = tuple(int(a) for a in fmt[1].split(','))
+                fmt_options = fmt[1].split(',')
+                (t, l) = tuple(int(a) for a in fmt_options[:2])
                 if t not in [1, 2, 4] or l not in [0, 1, 2]:
                     raise ParseError(
                         'Unknown vendor format specification %s' % (fmt[1]),
                         file=state['file'],
                         line=state['line'])
+                if len(fmt_options) == 3:
+                    if fmt_options[2] != 'c':
+                        raise ParseError(
+                            'Unknown vendor format specification %s' % (fmt[1]),
+                            file=state['file'],
+                            line=state['line']
+                        )
             except ValueError:
                 raise ParseError(
                         'Syntax error in vendor specification',
