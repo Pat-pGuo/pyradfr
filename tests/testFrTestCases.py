@@ -9,22 +9,32 @@ config.read(config_file)
 
 
 class FrTestCaseRetriever:
-    def __init__(self, encode_func, decode_func, match_func, prev_result_func):
+    def __init__(self, encode_func, decode_func, match_func):
         self.parser = FrTestCaseParser()
 
         self.encode_func = encode_func
         self.decode_func = decode_func
         self.match = match_func
 
-        self.prev_result_func = prev_result_func
+        self.ready_for_match = None
 
     def parse_file(self, file):
-        file_test_cases = []
+        self.ready_for_match = False
+        file_test_cases = {}
 
         with open(file, 'r') as file_open:
             for line_num, line_content in enumerate(file_open):
                 try:
-                    file_test_cases.append(self.parse_line(line_content))
+                    cmd, test_case = self.parse_line(line_content)
+                    if cmd:
+                        match cmd:
+                            case 'encode-pair' | 'decode-pair':
+                                file_test_cases[line_num + 1] = test_case
+                                self.ready_for_match = True
+                            case 'match':
+                                if self.ready_for_match:
+                                    file_test_cases[line_num + 1] = test_case
+                                    self.ready_for_match = False
                 except ParseError as e:
                     print(f'Encountered Parse Error in file {file} on line'
                           f' {line_num + 1}. Error: {e}')
@@ -33,32 +43,37 @@ class FrTestCaseRetriever:
 
     def parse_line(self, line_content):
         test_case_funcs = {
-            'encode_pair': self.encode_func,
-            'decode_pair': self.decode_func,
+            'encode-pair': self.encode_func,
+            'decode-pair': self.decode_func,
             'match': self.match
         }
 
-        test_case = self.parser.start(line_content, self.prev_result_func)
+        test_case = self.parser.start(line_content)
         if test_case:
-            cmd, data = test_case['testcase']
-            return test_case_funcs[cmd](data)
+            return test_case[0], (test_case_funcs[test_case[0]], test_case[1])
+        return None, None
 
 
 class TestFrTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tc_retriever = FrTestCaseRetriever(
-            cls.run_encode_pair, cls.run_decode_pair, cls.run_match,
-            cls.get_prev_result
+            cls.run_encode_pair, cls.run_decode_pair, cls.run_match
         )
-        cls.previous_result = None
+        cls.previous_result = 'None'
 
-        cls.test_cases = []
+        # contains 2D array, with each file being an inner array
+        cls.test_cases = {}
         for root, dirs, files in os.walk(config['FRTESTCASES']['testFileDir']):
             for file in files:
-                cls.test_cases.append(
-                    cls.tc_retriever.parse_file(os.path.join(root, file))
+                file_path = os.path.join(root, file)
+                cls.test_cases[file_path] = (
+                    cls.tc_retriever.parse_file(file_path)
                 )
+
+        for i in cls.test_cases.keys():
+            for j in sorted(list(cls.test_cases[i].keys())):
+                print(i, j, cls.test_cases[i][j])
 
     def get_prev_result(self):
         return self.previous_result
