@@ -7,61 +7,68 @@ config_file = './frparser/testconfig.ini'
 config = configparser.ConfigParser()
 config.read(config_file)
 
-test_case_file_dir = ''
 
-class ContextManager:
-    def __init__(self):
+class FrTestCaseRetriever:
+    def __init__(self, encode_func, decode_func, match_func, prev_result_func):
         self.parser = FrTestCaseParser()
-        self.previous_result = None
 
-    def reset_previous_result(self):
-        self.previous_result = None
+        self.encode_func = encode_func
+        self.decode_func = decode_func
+        self.match = match_func
 
-    def get_previous_result(self):
-        pass
+        self.prev_result_func = prev_result_func
 
     def parse_file(self, file):
+        file_test_cases = []
+
         with open(file, 'r') as file_open:
             for line_num, line_content in enumerate(file_open):
                 try:
-                    self.parse_line(line_content)
+                    file_test_cases.append(self.parse_line(line_content))
                 except ParseError as e:
                     print(f'Encountered Parse Error in file {file} on line'
                           f' {line_num + 1}. Error: {e}')
 
     def parse_line(self, line_content):
-        test_case = self.parser.start(line_content, self.get_previous_result)
+        test_case_funcs = {
+            'encode_pair': self.encode_func,
+            'decode_pair': self.decode_func,
+            'match': self.match
+        }
+
+        test_case = self.parser.start(line_content, self.prev_result_func)
         if test_case:
             cmd, data = test_case['testcase']
-            match cmd:
-                case 'encode-pair':
-                    self.test_encode_pair(data)
-                case 'decode-pair':
-                    self.test_decode_pair(data)
-                case 'match':
-                    self.test_match(data)
-
-    def test_encode_pair(self, data):
-        pass
-
-    def test_decode_pair(self, data):
-        pass
-
-    def test_match(self, data):
-        pass
+            return test_case_funcs[cmd](data)
 
 
 class TestFrTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        pass
+        cls.context = FrTestCaseRetriever(
+            cls.run_encode_pair, cls.run_decode_pair, cls.run_match,
+            cls.get_prev_result
+        )
+        cls.previous_result = None
+
+    def get_prev_result(self):
+        return self.previous_result
 
     def setUp(self):
-        self.context_manager = ContextManager()
+        pass
 
     def tearDown(self):
         pass
 
+    def run_encode_pair(self, data):
+        pass
+
+    def run_decode_pair(self, data):
+        pass
+
+    def run_match(self, data):
+        self.assertEqual(data, self.previous_result)
+
     def test_all_fr_test_cases(self):
-        for test_case_file in os.listdir(test_case_file_dir):
+        for test_case_file in os.listdir():
             self.context_manager.parse_file(test_case_file)
