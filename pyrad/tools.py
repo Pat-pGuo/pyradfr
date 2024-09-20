@@ -179,15 +179,15 @@ def EncodeIfid(addr):
 def EncodeVsa(data):
     v_type = struct.pack('B', data['type'])
     v_len = struct.pack('B', data['length'])
-    v_id = struct.pack('L', data['id'])
+    v_id = struct.pack('I', data['id'])
 
-    v_attr = ''
+    v_attr = b''
     for attribute in data['attributes']:
         attr_type = struct.pack('B', attribute['type'])
         attr_len = struct.pack('B', attribute['length'])
-        attr_id = struct.pack('L', attribute['id'])
+        attr_value = struct.pack('H', attribute['value'])
 
-        v_attr += attr_type + attr_len + attr_id
+        v_attr += attr_type + attr_len + attr_value
 
     return v_type + v_len + v_id + v_attr
 
@@ -246,19 +246,21 @@ def DecodeIfid(addr):
     return ':'.join(map('{0:02x}'.format, struct.unpack('H'*8, addr))).upper()
 
 def DecodeVsa(data):
-    v_type = struct.unpack('B', data[0:8])
-    v_len = struct.unpack('B', data[8:16])
-    v_id = struct.unpack('L', data[16:48])
+    v_type = struct.unpack('B', data[0:1])
+    v_len = struct.unpack('B', data[1:2])
+    v_id = struct.unpack('I', data[2:6])
 
     attributes = []
-    for attribute in data[48::24]:
-        attr_type = struct.unpack('B', attribute[0:8])
-        attr_len = struct.unpack('B', attribute[8:16])
-        attr_id = struct.unpack('L', attribute[16:48])
+    for attr_num in range((len(data) - 6) // 4):
+        attribute = data[6 + attr_num * 4: 6 + (attr_num + 1) * 4]
+
+        attr_type = struct.unpack('B', attribute[0:1])
+        attr_len = struct.unpack('B', attribute[1:2])
+        attr_value = struct.unpack('H', attribute[2:])
         attributes.append({
             'type': attr_type,
             'length': attr_len,
-            'id': attr_id
+            'value': attr_value
         })
 
     return {
