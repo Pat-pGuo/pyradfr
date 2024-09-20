@@ -1,12 +1,17 @@
 import unittest
 import os
-from tests.frparser.frtestparser import ParseError, TestCaseParser
+from tests.frparser.frtestparser import ParseError, FrTestCaseParser
+import configparser
+
+config_file = './frparser/testconfig.ini'
+config = configparser.ConfigParser()
+config.read(config_file)
 
 test_case_file_dir = ''
 
 class ContextManager:
     def __init__(self):
-        self.parser = TestCaseParser()
+        self.parser = FrTestCaseParser()
         self.previous_result = None
 
     def reset_previous_result(self):
@@ -47,6 +52,10 @@ class ContextManager:
 
 
 class TestFrTestCases(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        pass
+
     def setUp(self):
         self.context_manager = ContextManager()
 

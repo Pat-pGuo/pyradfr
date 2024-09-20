@@ -3,7 +3,7 @@ whitespaces = [' ', '\n', '\r']
 class ParseError(Exception):
     pass
 
-class TestCaseParser:
+class FrTestCaseParser:
     def __init__(self):
         self.buffer = None
         self.cursor = None
