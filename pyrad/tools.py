@@ -271,34 +271,82 @@ def DecodeVsa(data):
     }
 
 def EncodeFloat32(value):
+    try:
+        value = float(value)
+    except:
+        raise TypeError('Can not encode non-float as float32')
     return struct.pack('f', value)
 
 def DecodeFloat32(value):
     return struct.unpack('f', value)[0]
 
 def EncodeInt64(value):
+    try:
+        value = int(value)
+    except:
+        raise TypeError('Can not encode non-integer as int64')
     return struct.pack('q', value)
 
 def DecodeInt64(value):
     return struct.unpack('q', value)[0]
 
 def EncodeUint8(value):
+    try:
+        value = int(value)
+    except:
+        raise TypeError('Can not encode non-integer as uint8')
     return struct.pack('B', value)
 
 def DecodeUint8(value):
     return struct.unpack('B', value)[0]
 
 def EncodeUint64(value):
+    try:
+        value = int(value)
+    except:
+        raise TypeError('Can not encode non-integer as uint64')
     return struct.pack('Q', value)
 
 def DecodeUint64(value):
     return struct.unpack('Q', value)[0]
 
 def EncodeBool(value):
-    return struct.pack('c', value)
+    try:
+        value = int(value)
+    except:
+        raise TypeError('Can not encode non-integer as bool')
+    return struct.pack('B', bool(value))
 
 def DecodeBool(value):
     return struct.unpack('c', value)[0]
+
+def EncodeGroup(value):
+    return # TODO
+
+def DecodeGroup(value):
+    return # TODO
+
+def EncodeTlv(value):
+    return # TODO
+
+def DecodeTlv(value):
+    return # TODO
+
+def EncodeUint16(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as uint16')
+    return struct.pack('!H', num)
+
+def DecodeUint16(value):
+    return struct.unpack('H', value)[0]
+
+def EncodeTimeDelta(value):
+    return # TODO
+
+def DecodeTimeDelta(value):
+    return # TODO
 
 def EncodeAttr(datatype, value):
     if datatype.lower() == 'string':
@@ -346,11 +394,22 @@ def EncodeAttr(datatype, value):
         return EncodeUint64(value)
     elif datatype == 'bool':
         return EncodeBool(value)
+    elif datatype == 'group':
+        return EncodeGroup(value)
+    elif datatype == 'tlv':
+        return EncodeTlv(value)
+    elif datatype == 'uint16':
+        return EncodeUint16(value)
+    elif datatype == 'time_delta':
+        return EncodeTimeDelta(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
 
 def DecodeAttr(datatype, value):
+    if not isinstance(value, bytes):
+        value = value.encode('utf-8')
+
     if datatype.lower() == 'string':
         return DecodeString(value)
     elif datatype == 'octets':
@@ -397,5 +456,13 @@ def DecodeAttr(datatype, value):
         return DecodeUint64(value)
     elif datatype == 'bool':
         return DecodeBool(value)
+    elif datatype == 'group':
+        return DecodeGroup(value)
+    elif datatype == 'tlv':
+        return DecodeTlv(value)
+    elif datatype == 'uint16':
+        return DecodeUint16(value)
+    elif datatype == 'time_delta':
+        return DecodeTimeDelta(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
