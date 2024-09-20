@@ -82,6 +82,7 @@ from pyrad import tools
 from pyrad import dictfile
 from copy import copy
 import logging
+from pyrad import varlenparser
 
 __docformat__ = 'epytext en'
 
@@ -89,11 +90,8 @@ __docformat__ = 'epytext en'
 DATATYPES = frozenset(['string', 'ipaddr', 'integer', 'date', 'octets',
                        'abinary', 'ipv6addr', 'ipv6prefix', 'short', 'byte',
                        'signed', 'ifid', 'ether', 'tlv', 'integer64',
-                       'combo-ip', 'ipv4prefix', 'ether', 'ifid', 'octets[14]',
-                       'octets[16]', 'octets[24]', 'octets[2]', 'octets[3]',
-                       'octets[50]', 'octets[68]', 'octets[70]', 'octets[84]',
-                       'octets[8]', 'uint32', 'vsa', 'extended', 'long-extended',
-                       'evs', 'String'])
+                       'combo-ip', 'ipv4prefix', 'ether', 'ifid', 'uint32',
+                       'vsa', 'extended', 'long-extended', 'evs', 'String'])
 
 
 class ParseError(Exception):
@@ -128,6 +126,8 @@ class ParseError(Exception):
 class Attribute(object):
     def __init__(self, name, code, datatype, is_sub_attribute=False, vendor='', values=None,
                  encrypt=0, has_tag=False):
+        datatype, length = varlenparser.VarLenParser().start(datatype)
+
         if datatype not in DATATYPES:
             raise ValueError('Invalid data type')
         self.name = name
@@ -170,6 +170,8 @@ class Dictionary(object):
         self.attrindex = bidict.BiDict()
         self.attributes = {}
         self.defer_parse = []
+
+        self.varlen_parser = varlenparser.VarLenParser()
 
         if dict:
             self.ReadDictionary(dict)
@@ -255,6 +257,7 @@ class Dictionary(object):
 
         datatype = datatype.split("[")[0]
 
+        datatype, length = self.varlen_parser.start(datatype)
         if datatype not in DATATYPES:
             raise ParseError('Illegal type: ' + datatype,
                              file=state['file'],

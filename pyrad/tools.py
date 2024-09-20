@@ -233,7 +233,7 @@ def DecodeIfid(addr):
 def EncodeAttr(datatype, value):
     if datatype.lower() == 'string':
         return EncodeString(value)
-    elif 'octets' in datatype:
+    elif datatype == 'octets':
         return EncodeOctets(value)
     elif datatype == 'integer' or datatype == 'uint32':
         return EncodeInteger(value)
@@ -271,7 +271,7 @@ def EncodeAttr(datatype, value):
 def DecodeAttr(datatype, value):
     if datatype.lower() == 'string':
         return DecodeString(value)
-    elif 'octets' in datatype:
+    elif datatype == 'octets':
         return DecodeOctets(value)
     elif datatype == 'integer' or datatype == 'uint32':
         return DecodeInteger(value)
