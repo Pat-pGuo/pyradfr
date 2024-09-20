@@ -270,6 +270,18 @@ def DecodeVsa(data):
         'attributes': attributes
     }
 
+def EncodeFloat32(value):
+    return struct.pack('f', value)
+
+def DecodeFloat32(value):
+    return struct.unpack('f', value)[0]
+
+def EncodeInt64(value):
+    return struct.pack('Q', value)
+
+def DecodeInt64(value):
+    return struct.unpack('Q', value)[0]
+
 def EncodeAttr(datatype, value):
     if datatype.lower() == 'string':
         return EncodeString(value)
@@ -306,6 +318,10 @@ def EncodeAttr(datatype, value):
         return EncodeIfid(value)
     elif datatype == 'vsa':
         return EncodeVsa(value)
+    elif datatype == 'float32':
+        return EncodeFloat32(value)
+    elif datatype == 'int64':
+        return EncodeInt64(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
@@ -347,5 +363,9 @@ def DecodeAttr(datatype, value):
         return DecodeIfid(value)
     elif datatype == 'vsa':
         return DecodeVsa(value)
+    elif datatype == 'float32':
+        return DecodeFloat32(value)
+    elif datatype == 'int64':
+        return DecodeInt64(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)

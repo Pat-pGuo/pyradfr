@@ -91,7 +91,8 @@ DATATYPES = frozenset(['string', 'ipaddr', 'integer', 'date', 'octets',
                        'abinary', 'ipv6addr', 'ipv6prefix', 'short', 'byte',
                        'signed', 'ifid', 'ether', 'tlv', 'integer64',
                        'combo-ip', 'ipv4prefix', 'ether', 'ifid', 'uint32',
-                       'vsa', 'extended', 'long-extended', 'evs', 'String'])
+                       'vsa', 'extended', 'long-extended', 'evs', 'String',
+                       'float32', 'int64'])
 
 
 class ParseError(Exception):
