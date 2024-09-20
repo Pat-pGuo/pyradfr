@@ -277,9 +277,21 @@ def DecodeFloat32(value):
     return struct.unpack('f', value)[0]
 
 def EncodeInt64(value):
-    return struct.pack('Q', value)
+    return struct.pack('q', value)
 
 def DecodeInt64(value):
+    return struct.unpack('q', value)[0]
+
+def EncodeUint8(value):
+    return struct.pack('B', value)
+
+def DecodeUint8(value):
+    return struct.unpack('B', value)[0]
+
+def EncodeUint64(value):
+    return struct.pack('Q', value)
+
+def DecodeUint64(value):
     return struct.unpack('Q', value)[0]
 
 def EncodeAttr(datatype, value):
@@ -322,6 +334,10 @@ def EncodeAttr(datatype, value):
         return EncodeFloat32(value)
     elif datatype == 'int64':
         return EncodeInt64(value)
+    elif datatype == 'uint8':
+        return EncodeUint8(value)
+    elif datatype == 'uint64':
+        return EncodeUint64(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
@@ -367,5 +383,9 @@ def DecodeAttr(datatype, value):
         return DecodeFloat32(value)
     elif datatype == 'int64':
         return DecodeInt64(value)
+    elif datatype == 'uint8':
+        return DecodeUint8(value)
+    elif datatype == 'uint64':
+        return DecodeUint64(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
