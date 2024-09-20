@@ -294,6 +294,12 @@ def EncodeUint64(value):
 def DecodeUint64(value):
     return struct.unpack('Q', value)[0]
 
+def EncodeBool(value):
+    return struct.pack('c', value)
+
+def DecodeBool(value):
+    return struct.unpack('c', value)[0]
+
 def EncodeAttr(datatype, value):
     if datatype.lower() == 'string':
         return EncodeString(value)
@@ -338,6 +344,8 @@ def EncodeAttr(datatype, value):
         return EncodeUint8(value)
     elif datatype == 'uint64':
         return EncodeUint64(value)
+    elif datatype == 'bool':
+        return EncodeBool(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
@@ -387,5 +395,7 @@ def DecodeAttr(datatype, value):
         return DecodeUint8(value)
     elif datatype == 'uint64':
         return DecodeUint64(value)
+    elif datatype == 'bool':
+        return DecodeBool(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
