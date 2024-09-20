@@ -8,8 +8,6 @@ class FrTestCaseParser:
         self.buffer = None
         self.cursor = None
 
-        self.pipe_func = None
-
     def get_next_word(self):
         cursor_start = self.cursor
         while self.buffer[self.cursor] not in whitespaces:
@@ -26,10 +24,9 @@ class FrTestCaseParser:
     def check_for_pipe(self):
         return self.buffer[self.cursor:-1] == '-'
 
-    def start(self, buffer, pipe_func):
+    def start(self, buffer):
         self.buffer = buffer
         self.cursor = 0
-        self.pipe_func = pipe_func
 
         return self.parse_command()
 
@@ -52,15 +49,13 @@ class FrTestCaseParser:
         if cmd not in command_functions:
             return None
 
-        return {
-            'testcase': command_functions[cmd](),
-        }
+        return command_functions[cmd]()
 
     def cmd_encode_pair(self):
         self.skip_whitespace()
 
         if self.check_for_pipe():
-            return 'encode-pair', self.pipe_func()
+            return 'encode-pair', '-'
 
         pairs = []
         while self.cursor < len(self.buffer):
@@ -75,7 +70,7 @@ class FrTestCaseParser:
         self.skip_whitespace()
 
         if self.check_for_pipe():
-            return 'decode-pair', self.pipe_func()
+            return 'decode-pair', '-'
 
         cursor_start = self.cursor
         while self.buffer[self.cursor] != '\n':
@@ -88,7 +83,7 @@ class FrTestCaseParser:
             return 'match', ''
 
         if self.check_for_pipe():
-            return 'match', self.pipe_func()
+            return 'match', '-'
 
         cursor_start = self.cursor
         while self.buffer[self.cursor] != '\n':
@@ -98,12 +93,10 @@ class FrTestCaseParser:
 
     def get_attribute_pair(self):
         attribute_name = self.find_attribute_name()
-        self.skip_whitespace()
-        self.find_equal_sign()
-        self.skip_whitespace()
+        operator = self.get_operator()
         attribute_value = self.find_attribute_value()
 
-        return attribute_name, attribute_value
+        return attribute_name, operator, attribute_value
 
     def find_attribute_name(self):
         cursor_start = self.cursor
@@ -115,10 +108,27 @@ class FrTestCaseParser:
             self.cursor += 1
         raise ParseError(f'Buffer ended on an Attribute Name')
 
-    def find_equal_sign(self):
-        if not self.buffer[self.cursor] == '=':
+    def get_operator(self):
+        self.skip_whitespace()
+        operators = ['=', ':=']
+
+        cursor_start = self.cursor
+
+        last_match_cursor = None
+        last_match_operator = None
+
+        while self.cursor < len(self.buffer):
+            if self.buffer[cursor_start:self.cursor] in operators:
+                last_match_cursor = self.cursor
+                last_match_operator = self.buffer[cursor_start:self.cursor]
+            self.cursor += 1
+
+        if last_match_cursor is None:
             raise ParseError(f'No equal operator found at pos {self.cursor}')
-        self.cursor += 1
+
+        self.cursor = last_match_cursor
+        self.skip_whitespace()
+        return last_match_operator
 
     def find_attribute_value(self):
         cursor_start = self.cursor
