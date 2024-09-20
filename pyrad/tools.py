@@ -176,6 +176,21 @@ def EncodeEther(addr):
 def EncodeIfid(addr):
     return struct.pack('8H', *map(lambda x: int(x, 16), (addr.split(':'))))
 
+def EncodeVsa(data):
+    v_type = struct.pack('B', data['type'])
+    v_len = struct.pack('B', data['length'])
+    v_id = struct.pack('L', data['id'])
+
+    v_attr = ''
+    for attribute in data['attributes']:
+        attr_type = struct.pack('B', attribute['type'])
+        attr_len = struct.pack('B', attribute['length'])
+        attr_id = struct.pack('L', attribute['id'])
+
+        v_attr += attr_type + attr_len + attr_id
+
+    return v_type + v_len + v_id + v_attr
+
 def DecodeString(orig_str):
     return orig_str.decode('utf-8')
 
@@ -230,6 +245,29 @@ def DecodeEther(addr):
 def DecodeIfid(addr):
     return ':'.join(map('{0:02x}'.format, struct.unpack('H'*8, addr))).upper()
 
+def DecodeVsa(data):
+    v_type = struct.unpack('B', data[0:8])
+    v_len = struct.unpack('B', data[8:16])
+    v_id = struct.unpack('L', data[16:48])
+
+    attributes = []
+    for attribute in data[48::24]:
+        attr_type = struct.unpack('B', attribute[0:8])
+        attr_len = struct.unpack('B', attribute[8:16])
+        attr_id = struct.unpack('L', attribute[16:48])
+        attributes.append({
+            'type': attr_type,
+            'length': attr_len,
+            'id': attr_id
+        })
+
+    return {
+        'type': v_type,
+        'length': v_len,
+        'id': v_id,
+        'attributes': attributes
+    }
+
 def EncodeAttr(datatype, value):
     if datatype.lower() == 'string':
         return EncodeString(value)
@@ -264,6 +302,8 @@ def EncodeAttr(datatype, value):
         return EncodeEther(value)
     elif datatype == 'ifid':
         return EncodeIfid(value)
+    elif datatype == 'vsa':
+        return EncodeVsa(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
@@ -303,5 +343,7 @@ def DecodeAttr(datatype, value):
         return DecodeEther(value)
     elif datatype == 'ifid':
         return DecodeIfid(value)
+    elif datatype == 'vsa':
+        return DecodeVsa(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
