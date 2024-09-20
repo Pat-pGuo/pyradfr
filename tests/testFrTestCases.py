@@ -29,6 +29,8 @@ class FrTestCaseRetriever:
                     print(f'Encountered Parse Error in file {file} on line'
                           f' {line_num + 1}. Error: {e}')
 
+        return file_test_cases
+
     def parse_line(self, line_content):
         test_case_funcs = {
             'encode_pair': self.encode_func,
@@ -45,11 +47,18 @@ class FrTestCaseRetriever:
 class TestFrTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.context = FrTestCaseRetriever(
+        cls.tc_retriever = FrTestCaseRetriever(
             cls.run_encode_pair, cls.run_decode_pair, cls.run_match,
             cls.get_prev_result
         )
         cls.previous_result = None
+
+        cls.test_cases = []
+        for root, dirs, files in os.walk(config['FRTESTCASES']['testFileDir']):
+            for file in files:
+                cls.test_cases.append(
+                    cls.tc_retriever.parse_file(os.path.join(root, file))
+                )
 
     def get_prev_result(self):
         return self.previous_result
@@ -70,5 +79,4 @@ class TestFrTestCases(unittest.TestCase):
         self.assertEqual(data, self.previous_result)
 
     def test_all_fr_test_cases(self):
-        for test_case_file in os.listdir():
-            self.context_manager.parse_file(test_case_file)
+        pass
