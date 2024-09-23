@@ -93,7 +93,7 @@ DATATYPES = frozenset(['string', 'ipaddr', 'integer', 'date', 'octets',
                        'combo-ip', 'ipv4prefix', 'uint32',
                        'vsa', 'extended', 'long-extended', 'evs', 'String',
                        'float32', 'int64', 'uint8', 'uint64', 'bool',
-                       'group', 'uint16', 'time_delta'])
+                       'uint16'])
 
 
 class ParseError(Exception):
