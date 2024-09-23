@@ -118,3 +118,33 @@ class LongExtended(Extended):
     @more.setter
     def more(self, more):
         self._more = more
+
+class Evs:
+    def __init__(self, vendor_id, evs_type, evs_value):
+        self._vendor_id = vendor_id
+        self._evs_type = evs_type
+        self._evs_value = evs_value
+
+    @property
+    def vendor_id(self):
+        return self._vendor_id
+
+    @vendor_id.setter
+    def vendor_id(self, vendor_id):
+        self._vendor_id = vendor_id
+
+    @property
+    def evs_type(self):
+        return self._evs_type
+
+    @evs_type.setter
+    def evs_type(self, evs_type):
+        self._evs_type = evs_type
+
+    @property
+    def evs_value(self):
+        return self._evs_value
+
+    @evs_value.setter
+    def evs_value(self, evs_value):
+        self._evs_value = evs_value

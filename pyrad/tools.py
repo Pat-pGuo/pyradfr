@@ -5,7 +5,7 @@ from ipaddress import IPv4Address, IPv6Address
 from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
-from pyrad.datatypes import Tlv, Extended, LongExtended, Vsa
+from pyrad.datatypes import Tlv, Extended, LongExtended, Vsa, Evs
 
 
 def EncodeString(origstr):
@@ -381,6 +381,19 @@ def DecodeExtended(value, attrcodes):
 
     return Extended(datatype, length, extended_datatype, value)
 
+def EncodeEvs(value: Evs, attrcodes):
+    vendor_id_bstr = struct.pack('I', value.vendor_id)
+    evs_type_bstr = struct.pack('B', value.evs_type)
+    evs_value_bstr = EncodeAttr(attrcodes.GetForward(value.evs_type), value.evs_value, attrcodes)
+
+    return vendor_id_bstr + evs_type_bstr + evs_value_bstr
+
+def DecodeEvs(value, attrcodes):
+    vendor_id, evs_type = struct.unpack('!IB', value[0:5])
+    evs_value = DecodeAttr(attrcodes.GetForward(evs_type), value[5:], attrcodes)
+
+    return Evs(vendor_id, evs_type, evs_value)
+
 def EncodeAttr(datatype, value, attrcodes):
     if datatype.lower() == 'string':
         return EncodeString(value)
@@ -437,6 +450,8 @@ def EncodeAttr(datatype, value, attrcodes):
         return EncodeExtended(value, attrcodes)
     elif datatype == 'long-extended':
         return EncodeLongExtended(value)
+    elif datatype == 'evs':
+        return EncodeEvs(value, attrcodes)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
@@ -501,5 +516,7 @@ def DecodeAttr(datatype, value, attrcodes):
         return DecodeExtended(value, attrcodes)
     elif datatype == 'long-extended':
         return DecodeLongExtended(value)
+    elif datatype == 'evs':
+        return DecodeEvs(value, attrcodes)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
