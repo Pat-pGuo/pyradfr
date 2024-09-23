@@ -1,3 +1,42 @@
+class Vsa:
+    def __init__(self, datatype, length, vendor_id, attributes):
+        self._type = datatype
+        self._len = length
+        self._vendor_id = vendor_id
+        self._attributes: tuple[Tlv] = attributes
+
+    @property
+    def datatype(self):
+        return self._type
+
+    @datatype.setter
+    def datatype(self, datatype):
+        self._type = datatype
+
+    @property
+    def length(self):
+        return self._len
+
+    @length.setter
+    def length(self, length):
+        self._len = length
+
+    @property
+    def vendor_id(self):
+        return self._vendor_id
+
+    @vendor_id.setter
+    def vendor_id(self, vendor_id):
+        self._vendor_id = vendor_id
+
+    @property
+    def attributes(self):
+        return self._attributes
+
+    @attributes.setter
+    def attributes(self, attributes):
+        self._attributes = attributes
+
 class Tlv:
     def __init__(self, datatype, length, value):
         self._type: int = datatype

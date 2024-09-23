@@ -5,7 +5,7 @@ from ipaddress import IPv4Address, IPv6Address
 from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
-from pyrad.datatypes import Tlv, Extended, LongExtended
+from pyrad.datatypes import Tlv, Extended, LongExtended, Vsa
 
 
 def EncodeString(origstr):
@@ -177,20 +177,16 @@ def EncodeEther(addr):
 def EncodeIfid(addr):
     return struct.pack('8H', *map(lambda x: int(x, 16), (addr.split(':'))))
 
-def EncodeVsa(data):
-    v_type = struct.pack('B', data['type'])
-    v_len = struct.pack('B', data['length'])
-    v_id = struct.pack('I', data['id'])
+def EncodeVsa(data: Vsa, attrcodes):
+    type_bstr = struct.pack('B', data.datatype)
+    len_bstr = struct.pack('B', data.length)
+    vendor_id_bstr = struct.pack('I', data.vendor_id)
 
     v_attr = b''
-    for attribute in data['attributes']:
-        attr_type = struct.pack('B', attribute['type'])
-        attr_len = struct.pack('B', attribute['length'])
-        attr_value = struct.pack('H', attribute['value'])
+    for attribute in data.attributes:
+        v_attr += EncodeAttr('tlv', attribute, attrcodes)
 
-        v_attr += attr_type + attr_len + attr_value
-
-    return v_type + v_len + v_id + v_attr
+    return type_bstr + len_bstr + vendor_id_bstr + v_attr
 
 def DecodeString(orig_str):
     return orig_str.decode('utf-8')
@@ -246,30 +242,21 @@ def DecodeEther(addr):
 def DecodeIfid(addr):
     return ':'.join(map('{0:02x}'.format, struct.unpack('H'*8, addr))).upper()
 
-def DecodeVsa(data):
+def DecodeVsa(data, attrcodes):
     v_type = struct.unpack('B', data[0:1])
     v_len = struct.unpack('B', data[1:2])
     v_id = struct.unpack('I', data[2:6])
 
+    curr_attribute_start = 6
     attributes = []
-    for attr_num in range((len(data) - 6) // 4):
-        attribute = data[6 + attr_num * 4: 6 + (attr_num + 1) * 4]
+    while curr_attribute_start < len(data):
+        datatype = struct.unpack('B', data[curr_attribute_start : curr_attribute_start + 1])[0]
+        length = struct.unpack('B', data[curr_attribute_start + 1: curr_attribute_start + 2])[0]
+        value = DecodeAttr(datatype, data[curr_attribute_start + 2 : curr_attribute_start + length], attrcodes)
 
-        attr_type = struct.unpack('B', attribute[0:1])
-        attr_len = struct.unpack('B', attribute[1:2])
-        attr_value = struct.unpack('H', attribute[2:])
-        attributes.append({
-            'type': attr_type,
-            'length': attr_len,
-            'value': attr_value
-        })
+        attributes.append(Tlv(datatype, length, value))
 
-    return {
-        'type': v_type,
-        'length': v_len,
-        'id': v_id,
-        'attributes': attributes
-    }
+    return Vsa(v_type, v_len, v_id, attributes)
 
 def EncodeFloat32(value):
     try:
@@ -429,7 +416,7 @@ def EncodeAttr(datatype, value, attrcodes):
     elif datatype == 'ifid':
         return EncodeIfid(value)
     elif datatype == 'vsa':
-        return EncodeVsa(value)
+        return EncodeVsa(value, attrcodes)
     elif datatype == 'float32':
         return EncodeFloat32(value)
     elif datatype == 'int64':
@@ -493,7 +480,7 @@ def DecodeAttr(datatype, value, attrcodes):
     elif datatype == 'ifid':
         return DecodeIfid(value)
     elif datatype == 'vsa':
-        return DecodeVsa(value)
+        return DecodeVsa(value, attrcodes)
     elif datatype == 'float32':
         return DecodeFloat32(value)
     elif datatype == 'int64':
