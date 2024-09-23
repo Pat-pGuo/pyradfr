@@ -5,7 +5,7 @@ from ipaddress import IPv4Address, IPv6Address
 from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
-from pyrad.datatypes import Tlv
+from pyrad.datatypes import Tlv, Extended
 
 
 def EncodeString(origstr):
@@ -349,6 +349,34 @@ def EncodeUint16(num):
 def DecodeUint16(value):
     return struct.unpack('H', value)[0]
 
+def EncodeLongExtended(value):
+    return
+
+def DecodeLongExtended(value):
+    return
+
+def EncodeExtended(value: Extended, attrcodes):
+    datatype_bstr = struct.pack('B', value.datatype)
+    length_bstr = struct.pack('B', value.length)
+    extended_datatype_bstr = struct.pack('B', value.extended_type)
+
+    full_datatype = f'{value.datatype}.{value.extended_type}'
+
+    val_bstr = EncodeAttr(attrcodes.GetForward(full_datatype),
+                          value.value, attrcodes)
+    return datatype_bstr + length_bstr + extended_datatype_bstr + val_bstr
+
+def DecodeExtended(value, attrcodes):
+    datatype = struct.unpack('B', value[0:1])[0]
+    length = struct.unpack('B', value[1:2])[0]
+    extended_datatype = struct.unpack('B', value[2:3])[0]
+    full_datatype = f'{datatype}.{extended_datatype}'
+
+    value = DecodeAttr(attrcodes.GetForward(full_datatype),
+                       value[3:length], attrcodes)
+
+    return Extended(datatype, length, extended_datatype, value)
+
 def EncodeAttr(datatype, value, attrcodes):
     if datatype.lower() == 'string':
         return EncodeString(value)
@@ -399,6 +427,10 @@ def EncodeAttr(datatype, value, attrcodes):
         return EncodeTlv(value, attrcodes)
     elif datatype == 'uint16':
         return EncodeUint16(value)
+    elif datatype == 'long-extended':
+        return EncodeLongExtended(value)
+    elif datatype == 'extended':
+        return EncodeExtended(value, attrcodes)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
@@ -457,5 +489,9 @@ def DecodeAttr(datatype, value, attrcodes):
         return DecodeTlv(value, attrcodes)
     elif datatype == 'uint16':
         return DecodeUint16(value)
+    elif datatype == 'long-extended':
+        return DecodeLongExtended(value)
+    elif datatype == 'extended':
+        return DecodeExtended(value, attrcodes)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
