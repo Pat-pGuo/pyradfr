@@ -66,3 +66,16 @@ class Extended:
     @value.setter
     def value(self, value):
         self._val = value
+
+class LongExtended(Extended):
+    def __init__(self, datatype, length, extended_type, more, value):
+        Extended.__init__(self, datatype, length, extended_type, value)
+        self._more = more
+
+    @property
+    def more(self):
+        return self._more
+
+    @more.setter
+    def more(self, more):
+        self._more = more

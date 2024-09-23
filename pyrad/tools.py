@@ -5,7 +5,7 @@ from ipaddress import IPv4Address, IPv6Address
 from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
-from pyrad.datatypes import Tlv, Extended
+from pyrad.datatypes import Tlv, Extended, LongExtended
 
 
 def EncodeString(origstr):
@@ -349,11 +349,28 @@ def EncodeUint16(num):
 def DecodeUint16(value):
     return struct.unpack('H', value)[0]
 
-def EncodeLongExtended(value):
-    return
+def EncodeLongExtended(value: LongExtended):
+    datatype_bstr = struct.pack('B', value.datatype)
+    length_bstr = struct.pack('B', value.length)
+    extended_datatype_bstr = struct.pack('B', value.extended_type)
+
+    more_bstr = struct.pack('B', 255 if value.more else 0)
+
+    full_datatype = f'{value.datatype}.{value.extended_type}'
+
+    # Value field of packet should already be encoded
+    return (datatype_bstr + length_bstr + extended_datatype_bstr + more_bstr +
+            value.value)
 
 def DecodeLongExtended(value):
-    return
+    datatype = struct.unpack('B', value[0:1])[0]
+    length = struct.unpack('B', value[1:2])[0]
+    extended_datatype = struct.unpack('B', value[2:3])[0]
+
+    more = struct.unpack('B', value[3:4])[0] == 255
+
+    return LongExtended(datatype, length, extended_datatype, more,
+                        value[4:length])
 
 def EncodeExtended(value: Extended, attrcodes):
     datatype_bstr = struct.pack('B', value.datatype)
@@ -431,6 +448,8 @@ def EncodeAttr(datatype, value, attrcodes):
         return EncodeLongExtended(value)
     elif datatype == 'extended':
         return EncodeExtended(value, attrcodes)
+    elif datatype == 'long-extended':
+        return EncodeLongExtended(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
@@ -493,5 +512,7 @@ def DecodeAttr(datatype, value, attrcodes):
         return DecodeLongExtended(value)
     elif datatype == 'extended':
         return DecodeExtended(value, attrcodes)
+    elif datatype == 'long-extended':
+        return DecodeLongExtended(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
