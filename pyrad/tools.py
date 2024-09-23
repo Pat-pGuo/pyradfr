@@ -5,6 +5,7 @@ from ipaddress import IPv4Address, IPv6Address
 from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
+from pyrad.datatypes import Tlv
 
 
 def EncodeString(origstr):
@@ -320,11 +321,23 @@ def EncodeBool(value):
 def DecodeBool(value):
     return struct.unpack('c', value)[0]
 
-def EncodeTlv(value):
-    return # TODO
+def EncodeTlv(tlv: Tlv, attrcodes):
+    type_bstr = struct.pack('B', tlv.datatype)
+    len_bstr = struct.pack('B', tlv.length)
 
-def DecodeTlv(value):
-    return # TODO
+    # Use nested calls to encoded nested TLVs
+    val_bstr = EncodeAttr(attrcodes.GetForward(tlv.datatype),
+                          tlv.value, attrcodes)
+
+    return type_bstr + len_bstr + val_bstr
+
+def DecodeTlv(value, attrcodes) -> Tlv:
+    datatype = struct.unpack('B', value[0:1])[0]
+    length = struct.unpack('B', value[1:2])[0]
+
+    value = DecodeAttr(attrcodes.GetForward(datatype),
+                       value[2:length], attrcodes)
+    return Tlv(datatype, length, value)
 
 def EncodeUint16(num):
     try:
@@ -336,7 +349,7 @@ def EncodeUint16(num):
 def DecodeUint16(value):
     return struct.unpack('H', value)[0]
 
-def EncodeAttr(datatype, value):
+def EncodeAttr(datatype, value, attrcodes):
     if datatype.lower() == 'string':
         return EncodeString(value)
     elif datatype == 'octets':
@@ -383,14 +396,14 @@ def EncodeAttr(datatype, value):
     elif datatype == 'bool':
         return EncodeBool(value)
     elif datatype == 'tlv':
-        return EncodeTlv(value)
+        return EncodeTlv(value, attrcodes)
     elif datatype == 'uint16':
         return EncodeUint16(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
 
-def DecodeAttr(datatype, value):
+def DecodeAttr(datatype, value, attrcodes):
     if not isinstance(value, bytes):
         value = value.encode('utf-8')
 
@@ -441,7 +454,7 @@ def DecodeAttr(datatype, value):
     elif datatype == 'bool':
         return DecodeBool(value)
     elif datatype == 'tlv':
-        return DecodeTlv(value)
+        return DecodeTlv(value, attrcodes)
     elif datatype == 'uint16':
         return DecodeUint16(value)
     else:

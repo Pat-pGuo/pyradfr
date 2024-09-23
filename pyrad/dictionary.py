@@ -173,6 +173,8 @@ class Dictionary(object):
         self.attributes = {}
         self.defer_parse = []
 
+        self.attrcodes = bidict.BiDict()
+
         self.varlen_parser = varlenparser.VarLenParser()
 
         if dict:
@@ -234,6 +236,8 @@ class Dictionary(object):
                         #                  line=state['line'])
 
         (attribute, code, datatype) = tokens[1:4]
+
+        self.attrcodes.Add(code, datatype)
 
         codes = code.split('.')
 
@@ -313,7 +317,7 @@ class Dictionary(object):
 
         if adef.type in ['integer', 'signed', 'short', 'byte', 'integer64']:
             value = int(value, 0)
-        value = tools.EncodeAttr(adef.type, value)
+        value = tools.EncodeAttr(adef.type, value, self.attrcodes)
         self.attributes[attr].values.Add(key, value)
 
     def __ParseVendor(self, state, tokens):
