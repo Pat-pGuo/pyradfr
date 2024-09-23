@@ -568,6 +568,10 @@ class Packet(OrderedDict):
                 # POST: Message Authenticator AVP is present.
                 self.message_authenticator = True
                 self.setdefault(key, []).append(value)
+            elif attribute and attribute.type == 'extended':
+                self._PktDecodeExtendedAttribute(key, value)
+            elif attribute and attribute.type == 'long-extended':
+                self._PktDecodeLongExtendedAttribute(key, value, attrlen)
             elif attribute and attribute.type == 'tlv':
                 self._PktDecodeTlvAttribute(key,value)
             else:
@@ -575,6 +579,27 @@ class Packet(OrderedDict):
 
             packet = packet[attrlen:]
 
+    def _PktDecodeExtendedAttribute(self, code, data):
+        extended_code = struct.unpack('!B', data[0:1])[0]
+        full_code = f'{code}.{extended_code}'
+
+        self.setdefault(full_code, []).append(data)
+
+    def _PktDecodeLongExtendedAttribute(self, code, data, attrlen):
+        extended_code, flags = struct.unpack('!BB', data[0:2])[0:2]
+        full_code = f'{code}.{extended_code}'
+
+        full_value = b''
+        while flags >= 128:
+            full_value += data[:attrlen - 4]
+
+            data = data[attrlen - 4:]
+
+            new_code, attrlen, new_extended_code, flags = struct.unpack('!BBBB', data[:4])
+            if new_code != code or new_extended_code != extended_code:
+                raise TypeError()
+
+        self.setdefault(full_code, []).append(full_value)
 
     def _salt_en_decrypt(self, data, salt):
         result = b''
