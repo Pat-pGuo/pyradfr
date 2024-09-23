@@ -37,7 +37,11 @@ class V4FrTestParser(BaseParser):
         return command_funcs[command]()
 
     def cmd_encode_pair(self):
-        return self.token_attribute_name()
+        attr_name = self.token_attribute_name()
+        operator = self.token_operators()
+        attr_value = self.token_attribute_value()
+
+        return attr_name, operator, attr_value
 
     def cmd_decode_pair(self):
         return 'B'
@@ -72,3 +76,40 @@ class V4FrTestParser(BaseParser):
             return self.buffer[cursor_start:self.cursor]
 
         raise ParseError
+
+    def token_attribute_value(self):
+        self.move_past_whitespace()
+
+        if self.buffer[self.cursor] == '{':
+            self.cursor += 1
+            return self.token_dictionary_attribute()
+
+        if self.buffer[self.cursor] == '"':
+            self.cursor += 1
+            return self.token_quoted_string()
+
+        cursor_start = self.cursor
+        while not self.no_buffer_left:
+            if self.at_whitespace or self.buffer[self.cursor] == ',':
+                return self.buffer[cursor_start:self.cursor]
+            self.cursor += 1
+        return self.buffer[cursor_start:self.cursor]
+
+    def token_dictionary_attribute(self):
+        self.move_past_whitespace()
+
+        attr_name = self.token_attribute_name()
+        operator = self.token_operators()
+        attr_value = self.token_attribute_value()
+
+        return {
+            attr_name: attr_value,
+        }
+
+    def token_quoted_string(self):
+        cursor_start = self.cursor
+        while not self.no_buffer_left:
+            if self.buffer[self.cursor] == '"':
+                self.cursor += 1
+                return self.buffer[cursor_start:self.cursor - 1]
+            self.cursor += 1
