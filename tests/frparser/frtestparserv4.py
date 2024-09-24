@@ -1,4 +1,5 @@
 from tests.frparser.baseparser import BaseParser
+from tests.frparser.testcasecontext import TestCaseContext, Pair
 
 import enum
 
@@ -9,6 +10,32 @@ class TestCommands(str, enum.Enum):
 
 class ParseError(Exception):
     pass
+
+class Pair:
+    def __init__(self, name, operator, value):
+        self._name = name
+        self._operator = operator
+        self._value = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+    @property
+    def operator(self):
+        return self._operator
 
 class V4FrTestParser(BaseParser):
     def __init__(self, operator_tokens=None, delimiter=','):
@@ -44,7 +71,7 @@ class V4FrTestParser(BaseParser):
             operator = self.token_operators()
             attr_value = self.token_attribute_value()
 
-            attributes.append([attr_name, operator, attr_value])
+            attributes.append(Pair(attr_name, operator, attr_value))
 
             if self.no_buffer_left:
                 break
@@ -118,7 +145,7 @@ class V4FrTestParser(BaseParser):
             operator = self.token_operators()
             attr_value = self.token_attribute_value()
 
-            values.append([attr_name, operator, attr_value])
+            values.append(Pair(attr_name, operator, attr_value))
 
             self.move_past_whitespace()
 
