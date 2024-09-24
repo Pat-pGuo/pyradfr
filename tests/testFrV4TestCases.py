@@ -1,6 +1,7 @@
 import unittest
 from pyrad.dictionary import Dictionary
-from tests.frparser.frtestparserv4 import V4FrTestParser, TestCommands
+from pyrad.datatypes import *
+from tests.frparser.frtestparserv4 import V4FrTestParser, TestCommands, Pair
 from tests.frparser.testcasecontext import TestCaseContext
 import os
 import configparser
@@ -39,6 +40,65 @@ class V4TestCaseRetriever:
 
         return testcases
 
+
+def convert_fr_datatype(type: str, value: Pair):
+    match type:
+        case 'string' | 'String':
+            return
+        case 'ipaddr':
+            return
+        case 'integer':
+            return
+        case 'date':
+            return
+        case 'octets':
+            return
+        case 'abinary':
+            return
+        case 'ipv6addr':
+            return
+        case 'ipv6prefix':
+            return
+        case 'short':
+            return
+        case 'byte':
+            return
+        case 'signed':
+            return
+        case 'ifid':
+            return
+        case 'ether':
+            return
+        case 'tlv':
+            return
+        case 'integer64':
+            return
+        case 'combo-ip':
+            return
+        case 'ipv4prefix':
+            return
+        case 'uint32':
+            return
+        case 'vsa':
+            return
+        case 'extended':
+            return
+        case 'long-extended':
+            return
+        case 'evs':
+            return
+        case 'float32':
+            return
+        case 'int64':
+            return
+        case 'uint8':
+            return
+        case 'uint64':
+            return
+        case 'bool':
+            return
+        case 'uint16':
+            return
 
 class TestFrV4TestCases(unittest.TestCase):
     @classmethod

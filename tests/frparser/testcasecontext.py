@@ -21,3 +21,7 @@ class TestCaseContext:
     @property
     def values(self):
         return self._values
+
+    @values.setter
+    def values(self, value):
+        self._values = value
