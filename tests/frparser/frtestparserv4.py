@@ -3,6 +3,8 @@ from tests.frparser.testcasecontext import TestCaseContext
 
 import enum
 
+token_prev_result = '-'
+
 class TestCommands(str, enum.Enum):
     encode_pair = 'encode-pair'
     decode_pair = 'decode-pair'
@@ -64,7 +66,12 @@ class V4FrTestParser(BaseParser):
 
         return command, command_funcs[command]()
 
-    def cmd_encode_pair(self) -> list[Pair]:
+    def cmd_encode_pair(self) -> list[Pair] | str:
+        self.move_past_whitespace()
+        if self.buffer[self.cursor] == token_prev_result:
+            self.cursor = len(self.buffer) - 1
+            return '-'
+
         attributes = []
         while True:
             attr_name = self.token_attribute_name()
@@ -83,15 +90,30 @@ class V4FrTestParser(BaseParser):
 
         return attributes
 
-    def cmd_decode_pair(self) -> bytes:
+    def cmd_decode_pair(self) -> bytes | str:
         self.move_past_whitespace()
+
+        if self.buffer[self.cursor] == token_prev_result:
+            self.cursor = len(self.buffer) - 1
+            return '-'
+
         return bytes.fromhex(self.buffer[self.cursor:])
 
-    def cmd_match(self) -> bytes | list[Pair]:
+    def cmd_match(self) -> bytes | list[Pair] | str:
+        self.move_past_whitespace()
+        if self.no_buffer_left:
+            return ''
+
+        cursor_start = self.cursor
         try:
             return self.cmd_decode_pair()
         except ValueError:
-            return self.cmd_encode_pair()
+            self.cursor = cursor_start
+            try:
+                return self.cmd_encode_pair()
+            except ParseError:
+                self.cursor = cursor_start
+                return self.buffer[self.cursor:]
 
     def token_attribute_name(self) -> tuple[str,...]:
         self.move_past_whitespace()
@@ -130,7 +152,11 @@ class V4FrTestParser(BaseParser):
 
         if self.buffer[self.cursor] == '"':
             self.cursor += 1
-            return self.token_quoted_string()
+            return self.token_double_quoted_string()
+
+        if self.buffer[self.cursor] == "'":
+            self.cursor += 1
+            return self.token_single_quoted_string()
 
         cursor_start = self.cursor
         while not self.no_buffer_left:
@@ -162,10 +188,18 @@ class V4FrTestParser(BaseParser):
 
         return values
 
-    def token_quoted_string(self) -> str:
+    def token_double_quoted_string(self) -> str:
         cursor_start = self.cursor
         while not self.no_buffer_left:
             if self.buffer[self.cursor] == '"':
+                self.cursor += 1
+                return self.buffer[cursor_start:self.cursor - 1]
+            self.cursor += 1
+
+    def token_single_quoted_string(self) -> str:
+        cursor_start = self.cursor
+        while not self.no_buffer_left:
+            if self.buffer[self.cursor] == "'":
                 self.cursor += 1
                 return self.buffer[cursor_start:self.cursor - 1]
             self.cursor += 1
