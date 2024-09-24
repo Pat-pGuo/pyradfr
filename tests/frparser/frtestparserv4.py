@@ -111,14 +111,14 @@ class V4FrTestParser(BaseParser):
     def token_dictionary_attribute(self):
         self.move_past_whitespace()
 
-        dictionary = {}
+        values = []
 
         while True:
             attr_name = self.token_attribute_name()
             operator = self.token_operators()
             attr_value = self.token_attribute_value()
 
-            dictionary[attr_name] = attr_value
+            values.append([attr_name, operator, attr_value])
 
             self.move_past_whitespace()
 
@@ -129,7 +129,7 @@ class V4FrTestParser(BaseParser):
             if self.buffer[self.cursor] == ',':
                 self.cursor += 1
 
-        return dictionary
+        return values
 
     def token_quoted_string(self):
         cursor_start = self.cursor
