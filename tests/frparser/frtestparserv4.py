@@ -73,6 +73,8 @@ class V4FrTestParser(BaseParser):
 
             attributes.append(Pair(attr_name, operator, attr_value))
 
+            # for dealing with whitespace as last char (e.g., '\n')
+            self.move_past_whitespace()
             if self.no_buffer_left:
                 break
 
