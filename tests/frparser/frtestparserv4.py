@@ -11,11 +11,12 @@ class ParseError(Exception):
     pass
 
 class V4FrTestParser(BaseParser):
-    def __init__(self, operator_tokens=None):
+    def __init__(self, operator_tokens=None, delimiter=','):
         super().__init__()
         self.operator_tokens = operator_tokens
         if not operator_tokens:
             self.operator_tokens = ['=', ':=']
+        self.delimiter = delimiter
 
     def start(self, buffer):
         self.buffer = buffer
@@ -37,11 +38,21 @@ class V4FrTestParser(BaseParser):
         return command_funcs[command]()
 
     def cmd_encode_pair(self):
-        attr_name = self.token_attribute_name()
-        operator = self.token_operators()
-        attr_value = self.token_attribute_value()
+        attributes = []
+        while True:
+            attr_name = self.token_attribute_name()
+            operator = self.token_operators()
+            attr_value = self.token_attribute_value()
 
-        return attr_name, operator, attr_value
+            attributes.append([attr_name, operator, attr_value])
+
+            if self.no_buffer_left:
+                break
+
+            if self.buffer[self.cursor] == ',':
+                self.cursor += 1
+
+        return attributes
 
     def cmd_decode_pair(self):
         return 'B'
@@ -98,13 +109,25 @@ class V4FrTestParser(BaseParser):
     def token_dictionary_attribute(self):
         self.move_past_whitespace()
 
-        attr_name = self.token_attribute_name()
-        operator = self.token_operators()
-        attr_value = self.token_attribute_value()
+        dictionary = {}
 
-        return {
-            attr_name: attr_value,
-        }
+        while True:
+            attr_name = self.token_attribute_name()
+            operator = self.token_operators()
+            attr_value = self.token_attribute_value()
+
+            dictionary[attr_name] = attr_value
+
+            self.move_past_whitespace()
+
+            if self.buffer[self.cursor] == '}':
+                self.cursor += 1
+                break
+
+            if self.buffer[self.cursor] == ',':
+                self.cursor += 1
+
+        return dictionary
 
     def token_quoted_string(self):
         cursor_start = self.cursor
