@@ -64,7 +64,7 @@ class V4FrTestParser(BaseParser):
 
         return command_funcs[command]()
 
-    def cmd_encode_pair(self):
+    def cmd_encode_pair(self) -> list[Pair]:
         attributes = []
         while True:
             attr_name = self.token_attribute_name()
@@ -81,15 +81,15 @@ class V4FrTestParser(BaseParser):
 
         return attributes
 
-    def cmd_decode_pair(self):
+    def cmd_decode_pair(self) -> bytes:
         self.move_past_whitespace()
         return bytes.fromhex(self.buffer[self.cursor:])
 
-    def cmd_match(self):
+    def cmd_match(self) -> str:
         self.move_past_whitespace()
         return self.buffer[self.cursor:]
 
-    def token_attribute_name(self):
+    def token_attribute_name(self) -> tuple[str,...]:
         self.move_past_whitespace()
 
         cursor_start = self.cursor
@@ -103,7 +103,7 @@ class V4FrTestParser(BaseParser):
                 return (self.buffer[cursor_start:self.cursor-1],
                         *self.token_attribute_name())
 
-    def token_operators(self):
+    def token_operators(self) -> str:
         self.move_past_whitespace()
 
         cursor_start = self.cursor
@@ -117,7 +117,7 @@ class V4FrTestParser(BaseParser):
 
         raise ParseError
 
-    def token_attribute_value(self):
+    def token_attribute_value(self) -> str | list[Pair]:
         self.move_past_whitespace()
 
         if self.buffer[self.cursor] == '{':
@@ -135,7 +135,7 @@ class V4FrTestParser(BaseParser):
             self.cursor += 1
         return self.buffer[cursor_start:self.cursor]
 
-    def token_dictionary_attribute(self):
+    def token_dictionary_attribute(self) -> list[Pair]:
         self.move_past_whitespace()
 
         values = []
@@ -158,7 +158,7 @@ class V4FrTestParser(BaseParser):
 
         return values
 
-    def token_quoted_string(self):
+    def token_quoted_string(self) -> str:
         cursor_start = self.cursor
         while not self.no_buffer_left:
             if self.buffer[self.cursor] == '"':
