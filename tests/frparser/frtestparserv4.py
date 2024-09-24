@@ -55,10 +55,12 @@ class V4FrTestParser(BaseParser):
         return attributes
 
     def cmd_decode_pair(self):
-        return 'B'
+        self.move_past_whitespace()
+        return bytes.fromhex(self.buffer[self.cursor:])
 
     def cmd_match(self):
-        return 'C'
+        self.move_past_whitespace()
+        return self.buffer[self.cursor:]
 
     def token_attribute_name(self):
         self.move_past_whitespace()
