@@ -85,9 +85,11 @@ class V4FrTestParser(BaseParser):
         self.move_past_whitespace()
         return bytes.fromhex(self.buffer[self.cursor:])
 
-    def cmd_match(self) -> str:
-        self.move_past_whitespace()
-        return self.buffer[self.cursor:]
+    def cmd_match(self) -> bytes | list[Pair]:
+        try:
+            return self.cmd_decode_pair()
+        except ValueError:
+            return self.cmd_encode_pair()
 
     def token_attribute_name(self) -> tuple[str,...]:
         self.move_past_whitespace()
