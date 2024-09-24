@@ -1,5 +1,5 @@
 from tests.frparser.baseparser import BaseParser
-from tests.frparser.testcasecontext import TestCaseContext, Pair
+from tests.frparser.testcasecontext import TestCaseContext
 
 import enum
 
@@ -60,9 +60,9 @@ class V4FrTestParser(BaseParser):
 
         command = self.get_next_token()
         if command not in command_funcs.keys():
-            return None
+            return None, None
 
-        return command_funcs[command]()
+        return command, command_funcs[command]()
 
     def cmd_encode_pair(self) -> list[Pair]:
         attributes = []
