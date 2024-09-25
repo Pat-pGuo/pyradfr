@@ -236,6 +236,8 @@ class Dictionary(object):
                         #                  line=state['line'])
 
         (attribute, code, datatype) = tokens[1:4]
+        attribute = attribute.lower()
+        datatype = datatype.lower()
 
         self.attrcodes.Add(code, datatype)
 
@@ -261,6 +263,7 @@ class Dictionary(object):
         datatype = datatype.split("[")[0]
 
         datatype, length = self.varlen_parser.start(datatype)
+        datatype = datatype.lower()
         if datatype not in DATATYPES:
             raise ParseError('Illegal type: ' + datatype,
                              file=state['file'],
@@ -304,6 +307,7 @@ class Dictionary(object):
                              line=state['line'])
 
         (attr, key, value) = tokens[1:]
+        attr = attr.lower()
 
         try:
             adef = self.attributes[attr]
@@ -361,7 +365,7 @@ class Dictionary(object):
         self.vendors.Add(vendorname, int(vendor, 0))
 
     def __ParseBeginVendor(self, state, tokens):
-        if len(tokens) != 2:
+        if len(tokens) > 3:
             raise ParseError(
                     'Incorrect number of tokens for begin-vendor statement',
                     file=state['file'],
