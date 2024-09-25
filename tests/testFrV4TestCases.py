@@ -119,7 +119,13 @@ class DataTypeConverter:
 class TestFrV4TestCases(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.dictionary = Dictionary(config['FRTESTCASES']['dictionary'])
+        all_dictionaries = []
+        for root, dirs, files in os.walk(config['FRTESTCASES']['dictionary']):
+            for file in files:
+                if file == 'dictionary':
+                    all_dictionaries.append(os.path.join(root, file))
+        cls.dictionary = Dictionary(None, *all_dictionaries)
+        cls.data_converter = DataTypeConverter(cls.dictionary)
 
         cls.testcases: list[TestCaseContext] = []
         cls.tc_retriever = V4TestCaseRetriever()
@@ -132,13 +138,13 @@ class TestFrV4TestCases(unittest.TestCase):
         cls.previous_result = None
 
     def run_encode_pair_test(self, testcase_context):
-        testcase_context.values = self.convert_testcase_values(testcase_context.values)
+        testcase_context.values = self.data_converter.convert_testcase_values(testcase_context.values, self.previous_result)
 
     def run_decode_pair_test(self, testcase_context):
-        testcase_context.values = self.convert_testcase_values(testcase_context.values)
+        testcase_context.values = self.data_converter.convert_testcase_values(testcase_context.values, self.previous_result)
 
     def run_match_test(self, testcase_context):
-        testcase_context.values = self.convert_testcase_values(testcase_context.values)
+        testcase_context.values = self.data_converter.convert_testcase_values(testcase_context.values, self.previous_result)
 
     def test_all_test_cases(self):
         for testcase in self.testcases:
