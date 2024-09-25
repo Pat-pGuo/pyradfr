@@ -280,7 +280,10 @@ def DecodeInt64(value):
 
 def EncodeUint8(value):
     try:
-        value = int(value)
+        if value.startswith('0x'):
+            value = int(value, 16)
+        else:
+            value = int(value)
     except:
         raise TypeError('Can not encode non-integer as uint8')
     return struct.pack('B', value)
@@ -328,7 +331,10 @@ def DecodeTlv(value, attrcodes) -> Tlv:
 
 def EncodeUint16(num):
     try:
-        num = int(num)
+        if num.startswith('0x'):
+            num = int(num, 16)
+        else:
+            num = int(num)
     except:
         raise TypeError('Can not encode non-integer as uint16')
     return struct.pack('!H', num)
