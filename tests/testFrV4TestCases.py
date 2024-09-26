@@ -45,61 +45,55 @@ class DataTypeConverter:
     def convert_fr_datatype(self, datatype: str, value: Pair):
         match datatype:
             case 'string' | 'String':
-                return 1
+                return str(value.value)
             case 'ipaddr':
-                return
+                return str(value.value)
             case 'integer':
-                return
+                return int(value.value)
             case 'date':
-                return
+                return int(value.value)
             case 'octets':
-                return
+                return str(value.value)
             case 'abinary':
-                return
+                return str(value.value)
             case 'ipv6addr':
-                return
+                return str(value.value)
             case 'ipv6prefix':
-                return
+                return str(value.value)
             case 'short':
-                return
+                return int(value.value)
             case 'byte':
-                return
+                return int(value.value)
             case 'signed':
-                return
+                return int(value.value)
             case 'ifid':
-                return
+                return int(value.value, 16)
             case 'ether':
-                return
-            case 'tlv':
-                return
+                return int(value.value, 16)
             case 'integer64':
-                return
+                return int(value.value)
             case 'combo-ip':
-                return
+                return str(value.value)
             case 'ipv4prefix':
-                return
+                return str(value.value)
             case 'uint32':
-                return
+                return int(value.value)
             case 'vsa':
-                return
-            case 'extended':
-                return
-            case 'long-extended':
                 return
             case 'evs':
                 return
             case 'float32':
-                return
+                return float(value.value)
             case 'int64':
-                return
+                return int(value.value)
             case 'uint8':
-                return
+                return int(value.value)
             case 'uint64':
-                return
+                return int(value.value)
             case 'bool':
-                return
+                return int(value.value)
             case 'uint16':
-                return
+                return int(value.value)
 
     def convert_testcase_values(self, values, previous_result):
         if values == '-':
