@@ -1,6 +1,7 @@
 import unittest
 from pyrad.dictionary import Dictionary
 from pyrad.datatypes import *
+from pyrad.tools import EncodeAttr
 from tests.frparser.frtestparserv4 import V4FrTestParser, TestCommands, Pair
 from tests.frparser.testcasecontext import TestCaseContext
 import os
@@ -80,10 +81,6 @@ class DataTypeConverter:
                 return str(value.value)
             case 'uint32':
                 return int(value.value)
-            case 'vsa':
-                return
-            case 'evs':
-                return
             case 'float32':
                 return float(value.value)
             case 'int64':
@@ -139,6 +136,11 @@ class TestFrV4TestCases(unittest.TestCase):
 
     def run_encode_pair_test(self, testcase_context):
         testcase_context.values = self.data_converter.convert_testcase_values(testcase_context.values, self.previous_result)
+        datatype_code = struct.pack('B', int(self.dictionary[testcase_context.values.name]))
+        attribute_value = EncodeAttr(testcase_context.values.name, testcase_context.values.value, self.dictionary.attrcodes)
+        attribute_len = struct.pack('B', len(attribute_value) + 2)
+
+        self.previous_result = datatype_code + attribute_len + attribute_value
 
     def run_decode_pair_test(self, testcase_context):
         testcase_context.values = self.data_converter.convert_testcase_values(testcase_context.values, self.previous_result)

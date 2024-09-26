@@ -400,7 +400,7 @@ def DecodeEvs(value, attrcodes):
 
     return Evs(vendor_id, evs_type, evs_value)
 
-def EncodeAttr(datatype, value, attrcodes):
+def EncodeAttr(datatype, value, attrcodes=None):
     if datatype.lower() == 'string':
         return EncodeString(value)
     elif datatype == 'octets':
@@ -462,7 +462,7 @@ def EncodeAttr(datatype, value, attrcodes):
         raise ValueError('Unknown attribute type %s' % datatype)
 
 
-def DecodeAttr(datatype, value, attrcodes):
+def DecodeAttr(datatype, value, attrcodes=None):
     if not isinstance(value, bytes):
         value = value.encode('utf-8')
 

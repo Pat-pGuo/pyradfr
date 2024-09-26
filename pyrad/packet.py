@@ -248,7 +248,7 @@ class Packet(OrderedDict):
         if attr.values.HasBackward(value):
             return attr.values.GetBackward(value)
         else:
-            return tools.DecodeAttr(attr.type, value)
+            return tools.DecodeAttr(attr.type, value, self.dict.attrcodes)
 
     def _EncodeValue(self, attr, value):
         result = ''
