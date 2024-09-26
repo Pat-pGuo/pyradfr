@@ -5,6 +5,8 @@ from tests.frparser.frtestparserv4 import V4FrTestParser, TestCommands, Pair
 from tests.frparser.testcasecontext import TestCaseContext
 import os
 import configparser
+from pyrad.packet import Packet
+import struct
 
 config_file = './frparser/testconfig.ini'
 config = configparser.ConfigParser()
@@ -102,9 +104,13 @@ class DataTypeConverter:
             converted_values = []
             for pair in values:
                 converted_values.append(
-                    self.convert_fr_datatype(
-                        self.dictionary.attributes[''.join(pair.name)].type,
-                        pair.value
+                    Pair(
+                        pair.name,
+                        pair.operator,
+                        self.convert_fr_datatype(
+                            self.dictionary.attributes[''.join(pair.name)].type,
+                            pair.value
+                        )
                     )
                 )
             return converted_values
@@ -136,9 +142,12 @@ class TestFrV4TestCases(unittest.TestCase):
 
     def run_decode_pair_test(self, testcase_context):
         testcase_context.values = self.data_converter.convert_testcase_values(testcase_context.values, self.previous_result)
+        test_packet = Packet(dict=self.dictionary, packet='00 ' * 20 + testcase_context.values)
+        self.previous_result = test_packet[testcase_context.values.value]
 
     def run_match_test(self, testcase_context):
         testcase_context.values = self.data_converter.convert_testcase_values(testcase_context.values, self.previous_result)
+        self.assertEqual(self.previous_result, testcase_context.values)
 
     def test_all_test_cases(self):
         for testcase in self.testcases:

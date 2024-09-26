@@ -1,3 +1,5 @@
+from tests.frparser.frtestparserv4 import Pair
+
 class TestCaseContext:
     def __init__(self, filename, line_num, command, values):
         self._filename = filename
@@ -19,7 +21,7 @@ class TestCaseContext:
         return self._command
 
     @property
-    def values(self):
+    def values(self) -> Pair:
         return self._values
 
     @values.setter

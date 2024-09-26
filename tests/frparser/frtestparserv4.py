@@ -1,5 +1,4 @@
 from tests.frparser.baseparser import BaseParser
-from tests.frparser.testcasecontext import TestCaseContext
 
 import enum
 
