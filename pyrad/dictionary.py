@@ -236,8 +236,6 @@ class Dictionary(object):
                         #                  line=state['line'])
 
         (attribute, code, datatype) = tokens[1:4]
-        attribute = attribute
-        datatype = datatype
 
         self.attrcodes.Add(code, datatype)
 
@@ -263,7 +261,6 @@ class Dictionary(object):
         datatype = datatype.split("[")[0]
 
         datatype, length = self.varlen_parser.start(datatype)
-        datatype = datatype
         if datatype not in DATATYPES:
             raise ParseError('Illegal type: ' + datatype,
                              file=state['file'],
@@ -307,7 +304,6 @@ class Dictionary(object):
                              line=state['line'])
 
         (attr, key, value) = tokens[1:]
-        attr = attr
 
         try:
             adef = self.attributes[attr]
