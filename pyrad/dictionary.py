@@ -91,7 +91,7 @@ DATATYPES = frozenset(['string', 'ipaddr', 'integer', 'date', 'octets',
                        'abinary', 'ipv6addr', 'ipv6prefix', 'short', 'byte',
                        'signed', 'ifid', 'ether', 'tlv', 'integer64',
                        'combo-ip', 'ipv4prefix', 'uint32',
-                       'vsa', 'extended', 'long-extended', 'evs', 'String',
+                       'vsa', 'extended', 'long-extended', 'evs',
                        'float32', 'int64', 'uint8', 'uint64', 'bool',
                        'uint16'])
 
@@ -236,8 +236,8 @@ class Dictionary(object):
                         #                  line=state['line'])
 
         (attribute, code, datatype) = tokens[1:4]
-        attribute = attribute.lower()
-        datatype = datatype.lower()
+        attribute = attribute
+        datatype = datatype
 
         self.attrcodes.Add(code, datatype)
 
@@ -263,7 +263,7 @@ class Dictionary(object):
         datatype = datatype.split("[")[0]
 
         datatype, length = self.varlen_parser.start(datatype)
-        datatype = datatype.lower()
+        datatype = datatype
         if datatype not in DATATYPES:
             raise ParseError('Illegal type: ' + datatype,
                              file=state['file'],
@@ -307,7 +307,7 @@ class Dictionary(object):
                              line=state['line'])
 
         (attr, key, value) = tokens[1:]
-        attr = attr.lower()
+        attr = attr
 
         try:
             adef = self.attributes[attr]
