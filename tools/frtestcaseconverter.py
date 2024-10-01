@@ -32,11 +32,11 @@ class FrTCConverter:
                 match cmd:
                     case TestCommands.encode_pair.value | TestCommands.decode_pair.value:
                         if not looking_for_match:
-                            self.testcases.append((line_num, cmd, testcase))
+                            self.testcases.append([line_num, cmd, testcase])
                             looking_for_match = True
                     case TestCommands.match.value:
                         if looking_for_match:
-                            self.testcases.append((line_num, cmd, testcase))
+                            self.testcases.append([line_num, cmd, testcase])
                             looking_for_match = False
 
     def write_to_file(self, filedir, filename: str):
@@ -59,6 +59,7 @@ class FrTCConverter:
 
             for testcase in self.testcases:
                 testcase_value = ''
+                testcase[2] = testcase[2].replace("'", '"')
                 match testcase[1]:
                     case TestCommands.encode_pair.value:
                         testcase_value = f"self.encode_pair('{testcase[2]}')"
