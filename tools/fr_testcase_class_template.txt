@@ -1,7 +1,8 @@
 import unittest
+from tests.baseFrTestCase import BaseFrTestCase
 
 
-class {{ class_name }}(unittest.TestCase):
+class {{ class_name }}(BaseFrTestCase):
     @classmethod
     def setUp(cls):
         pass
