@@ -52,6 +52,24 @@ class V4FrTestParser(BaseParser):
 
         return self.token_command()
 
+    def start_cmd_only(self, buffer):
+        self.buffer = buffer
+        self.cursor = 0
+
+        command = self.get_next_token()
+        if command not in [
+            TestCommands.encode_pair.value,
+            TestCommands.decode_pair.value,
+            TestCommands.match.value
+        ]:
+            return None, None
+
+        else:
+            self.move_past_whitespace()
+            if self.buffer[-1] in self.whitespace_tokens:
+                return command, self.buffer[self.cursor:-1]
+            return command, self.buffer[self.cursor:]
+
     def token_command(self):
         command_funcs = {
             TestCommands.encode_pair.value: self.cmd_encode_pair,

@@ -28,7 +28,7 @@ class FrTCConverter:
         looking_for_match = False
         with open(filename, 'r') as fileopen:
             for line_num, line_content in enumerate(fileopen):
-                cmd, testcase = self.parser.start(line_content)
+                cmd, testcase = self.parser.start_cmd_only(line_content)
                 match cmd:
                     case TestCommands.encode_pair.value | TestCommands.decode_pair.value:
                         if not looking_for_match:
@@ -58,10 +58,18 @@ class FrTCConverter:
             )
 
             for testcase in self.testcases:
+                testcase_value = ''
+                match testcase[1]:
+                    case TestCommands.encode_pair.value:
+                        testcase_value = f"self.encode_pair('{testcase[2]}')"
+                    case TestCommands.decode_pair.value:
+                        testcase_value = f"self.decode_pair('{testcase[2]}')"
+                    case TestCommands.match.value:
+                        testcase_value = f"self.match('{testcase[2]}')"
                 fileopen.write(
                     self.function_template.render(
                         testcase_name = f'{testcase[0]}',
-                        testcase = f'self.assertTrue(True)'
+                        testcase = testcase_value
                     )
                 )
 
