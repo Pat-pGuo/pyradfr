@@ -1,2 +1,3 @@
-    def test_{{ testcase_name }}(self{{ arguments }}):
+    def test_{{ testcase_name }}(self):
         {{ testcase }}
+
