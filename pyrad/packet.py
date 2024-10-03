@@ -100,6 +100,10 @@ class Packet(OrderedDict):
         self.message_authenticator = None
         self.raw_packet = None
 
+        self.expecting_long_extended = False
+        self.prev_long_extended_key = None
+        self.long_extended_value_buffer = b''
+
         if 'dict' in attributes:
             self.dict = attributes['dict']
 
@@ -569,9 +573,14 @@ class Packet(OrderedDict):
                 self.message_authenticator = True
                 self.setdefault(key, []).append(value)
             elif attribute and attribute.type == 'extended':
-                self._PktDecodeExtendedAttribute(key, value)
+                extended_key = struct.unpack('!B', packet[2])
+                full_key = f'{key}.{extended_key}'
+                self.setdefault(full_key, []).append(value)
             elif attribute and attribute.type == 'long-extended':
-                self._PktDecodeLongExtendedAttribute(key, value, attrlen)
+                extended_key, flags = struct.unpack('!BB', packet[2:4])
+                full_key = f'{key}.{extended_key}'
+                self._PktDecodeLongExtendedAttribute(full_key, flags, value)
+
             elif attribute and attribute.type == 'tlv':
                 self._PktDecodeTlvAttribute(key,value)
             else:
@@ -579,27 +588,20 @@ class Packet(OrderedDict):
 
             packet = packet[attrlen:]
 
-    def _PktDecodeExtendedAttribute(self, code, data):
-        extended_code = struct.unpack('!B', data[0:1])[0]
-        full_code = f'{code}.{extended_code}'
+    def _PktDecodeLongExtendedAttribute(self, code, flags, value):
+        if self.expecting_long_extended and self.prev_long_extended_key != code:
+            raise PacketError('Inconsistent long extended attribute key')
 
-        self.setdefault(full_code, []).append(data)
+        self.long_extended_value_buffer += value
 
-    def _PktDecodeLongExtendedAttribute(self, code, data, attrlen):
-        extended_code, flags = struct.unpack('!BB', data[0:2])[0:2]
-        full_code = f'{code}.{extended_code}'
+        if flags > 128:
+            self.expecting_long_extended = True
+            self.prev_long_extended_key = code
+        else:
+            self.expecting_long_extended = False
+            self.setdefault(code, []).append(self.long_extended_value_buffer)
 
-        full_value = b''
-        while flags >= 128:
-            full_value += data[:attrlen - 4]
-
-            data = data[attrlen - 4:]
-
-            new_code, attrlen, new_extended_code, flags = struct.unpack('!BBBB', data[:4])
-            if new_code != code or new_extended_code != extended_code:
-                raise TypeError()
-
-        self.setdefault(full_code, []).append(full_value)
+        self.long_extended_value_buffer = b''
 
     def _salt_en_decrypt(self, data, salt):
         result = b''

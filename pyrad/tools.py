@@ -454,8 +454,6 @@ def EncodeAttr(datatype, value, attrcodes=None):
         return EncodeLongExtended(value)
     elif datatype == 'extended':
         return EncodeExtended(value, attrcodes)
-    elif datatype == 'long-extended':
-        return EncodeLongExtended(value)
     elif datatype == 'evs':
         return EncodeEvs(value, attrcodes)
     else:
@@ -520,8 +518,6 @@ def DecodeAttr(datatype, value, attrcodes=None):
         return DecodeLongExtended(value)
     elif datatype == 'extended':
         return DecodeExtended(value, attrcodes)
-    elif datatype == 'long-extended':
-        return DecodeLongExtended(value)
     elif datatype == 'evs':
         return DecodeEvs(value, attrcodes)
     else:
