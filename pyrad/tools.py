@@ -6,6 +6,7 @@ from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
 import sys
+from tkinter.ttk import Label
 
 curr_module = sys.modules[__name__]
 
@@ -232,6 +233,12 @@ def encode_int64(num):
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!q', num)
 
+def encode_float32(num):
+    try:
+        num = float(num)
+    except:
+        raise TypeError('Can not encode non-float as float')
+    return struct.pack('!f', num)
 
 # Decoding functions
 
@@ -304,6 +311,8 @@ def decode_uint64(num):
 def decode_int64(num):
     return (struct.unpack('!q', num))[0]
 
+def decode_float32(num):
+    return (struct.unpack('!f', num))[0]
 
 def EncodeAttr(datatype, value):
     try:
