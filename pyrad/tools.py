@@ -240,6 +240,13 @@ def encode_float32(num):
         raise TypeError('Can not encode non-float as float')
     return struct.pack('!f', num)
 
+def encode_ipv4prefix(addr):
+    if not isinstance(addr, str):
+        raise TypeError('Address has to be a string')
+    network = IPv4Network(addr)
+    return (struct.pack('!2B', *[0, network.prefixlen]) +
+            network.network_address.packed)
+
 # Decoding functions
 
 def decode_string(orig_str):
@@ -313,6 +320,14 @@ def decode_int64(num):
 
 def decode_float32(num):
     return (struct.unpack('!f', num))[0]
+
+def decode_ipv4prefix(addr):
+    addr = addr + b'\x00' * (6 - len(addr))
+    _, length, prefix = '.'.join(map('{0:x}'.format,
+                                     struct.unpack('!BB' + 'B' * 4,
+                                                   addr))
+                                 ).split('.', 2)
+    return str(IPv4Network('%s/%s' % (prefix, int(length, 16))))
 
 def EncodeAttr(datatype, value):
     try:
