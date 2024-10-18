@@ -796,7 +796,7 @@ class AuthPacket(Packet):
         if isinstance(userpwd, str):
             userpwd = userpwd.strip().encode('utf-8')
 
-        chap_password = tools.DecodeOctets(self.get(3)[0])
+        chap_password = tools.decode_octets(self.get(3)[0])
         if len(chap_password) != 17:
             return False
 

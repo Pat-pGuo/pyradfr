@@ -7,7 +7,9 @@ import struct
 import binascii
 
 
-def EncodeString(origstr):
+# Encoding functions
+
+def encode_string(origstr):
     if len(origstr) > 253:
         raise ValueError('Can only encode strings of <= 253 characters')
     if isinstance(origstr, str):
@@ -16,7 +18,7 @@ def EncodeString(origstr):
         return origstr
 
 
-def EncodeOctets(octetstring):
+def encode_octets(octetstring):
     # Check for max length of the hex encoded with 0x prefix, as a sanity check
     if len(octetstring) > 508:
         raise ValueError('Can only encode strings of <= 253 characters')
@@ -39,26 +41,26 @@ def EncodeOctets(octetstring):
     return encoded_octets
 
 
-def EncodeAddress(addr):
+def encode_ipaddr(addr):
     if not isinstance(addr, str):
         raise TypeError('Address has to be a string')
     return IPv4Address(addr).packed
 
 
-def EncodeIPv6Prefix(addr):
+def encode_ipv6prefix(addr):
     if not isinstance(addr, str):
         raise TypeError('IPv6 Prefix has to be a string')
     ip = IPv6Network(addr)
     return struct.pack('2B', *[0, ip.prefixlen]) + ip.ip.packed
 
 
-def EncodeIPv6Address(addr):
+def encode_ipv6addr(addr):
     if not isinstance(addr, str):
         raise TypeError('IPv6 Address has to be a string')
     return IPv6Address(addr).packed
 
 
-def EncodeAscendBinary(orig_str):
+def encode_abinary(orig_str):
     """
     Format: List of type=value pairs separated by spaces.
 
@@ -137,7 +139,7 @@ def EncodeAscendBinary(orig_str):
     return result
 
 
-def EncodeInteger(num, format='!I'):
+def encode_signed(num, format='!I'):
     try:
         num = int(num)
     except:
@@ -145,7 +147,7 @@ def EncodeInteger(num, format='!I'):
     return struct.pack(format, num)
 
 
-def EncodeInteger64(num, format='!Q'):
+def encode_integer64(num, format='!Q'):
     try:
         num = int(num)
     except:
@@ -153,103 +155,104 @@ def EncodeInteger64(num, format='!Q'):
     return struct.pack(format, num)
 
 
-def EncodeDate(num):
+def encode_date(num):
     if not isinstance(num, int):
         raise TypeError('Can not encode non-integer as date')
     return struct.pack('!I', num)
 
+# Decoding functions
 
-def DecodeString(orig_str):
+def decode_string(orig_str):
     return orig_str.decode('utf-8')
 
 
-def DecodeOctets(orig_bytes):
+def decode_octets(orig_bytes):
     return orig_bytes
 
 
-def DecodeAddress(addr):
+def decode_ipaddr(addr):
     return '.'.join(map(str, struct.unpack('BBBB', addr)))
 
 
-def DecodeIPv6Prefix(addr):
+def decode_ipv6prefix(addr):
     addr = addr + b'\x00' * (18-len(addr))
     _, length, prefix = ':'.join(map('{0:x}'.format, struct.unpack('!BB'+'H'*8, addr))).split(":", 2)
     return str(IPv6Network("%s/%s" % (prefix, int(length, 16))))
 
 
-def DecodeIPv6Address(addr):
+def decode_ipv6addr(addr):
     addr = addr + b'\x00' * (16-len(addr))
     prefix = ':'.join(map('{0:x}'.format, struct.unpack('!'+'H'*8, addr)))
     return str(IPv6Address(prefix))
 
 
-def DecodeAscendBinary(orig_bytes):
+def decode_abinary(orig_bytes):
     return orig_bytes
 
 
-def DecodeInteger(num, format='!I'):
+def decode_signed(num, format='!I'):
     return (struct.unpack(format, num))[0]
 
-def DecodeInteger64(num, format='!Q'):
+def decode_integer64(num, format='!Q'):
     return (struct.unpack(format, num))[0]
 
-def DecodeDate(num):
+def decode_date(num):
     return (struct.unpack('!I', num))[0]
 
 
 def EncodeAttr(datatype, value):
     if datatype == 'string':
-        return EncodeString(value)
+        return encode_string(value)
     elif datatype == 'octets':
-        return EncodeOctets(value)
+        return encode_octets(value)
     elif datatype == 'integer':
-        return EncodeInteger(value)
+        return encode_signed(value)
     elif datatype == 'ipaddr':
-        return EncodeAddress(value)
+        return encode_ipaddr(value)
     elif datatype == 'ipv6prefix':
-        return EncodeIPv6Prefix(value)
+        return encode_ipv6prefix(value)
     elif datatype == 'ipv6addr':
-        return EncodeIPv6Address(value)
+        return encode_ipv6addr(value)
     elif datatype == 'abinary':
-        return EncodeAscendBinary(value)
+        return encode_abinary(value)
     elif datatype == 'signed':
-        return EncodeInteger(value, '!i')
+        return encode_signed(value, '!i')
     elif datatype == 'short':
-        return EncodeInteger(value, '!H')
+        return encode_signed(value, '!H')
     elif datatype == 'byte':
-        return EncodeInteger(value, '!B')
+        return encode_signed(value, '!B')
     elif datatype == 'date':
-        return EncodeDate(value)
+        return encode_date(value)
     elif datatype == 'integer64':
-        return EncodeInteger64(value)
+        return encode_integer64(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
 
 
 def DecodeAttr(datatype, value):
     if datatype == 'string':
-        return DecodeString(value)
+        return decode_string(value)
     elif datatype == 'octets':
-        return DecodeOctets(value)
+        return decode_octets(value)
     elif datatype == 'integer':
-        return DecodeInteger(value)
+        return decode_signed(value)
     elif datatype == 'ipaddr':
-        return DecodeAddress(value)
+        return decode_ipaddr(value)
     elif datatype == 'ipv6prefix':
-        return DecodeIPv6Prefix(value)
+        return decode_ipv6prefix(value)
     elif datatype == 'ipv6addr':
-        return DecodeIPv6Address(value)
+        return decode_ipv6addr(value)
     elif datatype == 'abinary':
-        return DecodeAscendBinary(value)
+        return decode_abinary(value)
     elif datatype == 'signed':
-        return DecodeInteger(value, '!i')
+        return decode_signed(value, '!i')
     elif datatype == 'short':
-        return DecodeInteger(value, '!H')
+        return decode_signed(value, '!H')
     elif datatype == 'byte':
-        return DecodeInteger(value, '!B')
+        return decode_signed(value, '!B')
     elif datatype == 'date':
-        return DecodeDate(value)
+        return decode_date(value)
     elif datatype == 'integer64':
-        return DecodeInteger64(value)
+        return decode_integer64(value)
     else:
         raise ValueError('Unknown attribute type %s' % datatype)
