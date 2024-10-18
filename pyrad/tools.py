@@ -5,6 +5,9 @@ from ipaddress import IPv4Address, IPv6Address
 from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
+import sys
+
+curr_module = sys.modules[__name__]
 
 
 # Encoding functions
@@ -230,58 +233,15 @@ def decode_byte(num):
     return (struct.unpack('!B', num))[0]
 
 def EncodeAttr(datatype, value):
-    if datatype == 'string':
-        return encode_string(value)
-    elif datatype == 'octets':
-        return encode_octets(value)
-    elif datatype == 'integer':
-        return encode_integer(value)
-    elif datatype == 'ipaddr':
-        return encode_ipaddr(value)
-    elif datatype == 'ipv6prefix':
-        return encode_ipv6prefix(value)
-    elif datatype == 'ipv6addr':
-        return encode_ipv6addr(value)
-    elif datatype == 'abinary':
-        return encode_abinary(value)
-    elif datatype == 'signed':
-        return encode_signed(value)
-    elif datatype == 'short':
-        return encode_short(value)
-    elif datatype == 'byte':
-        return encode_byte(value)
-    elif datatype == 'date':
-        return encode_date(value)
-    elif datatype == 'integer64':
-        return encode_integer64(value)
-    else:
+    try:
+        encode_func = getattr(curr_module, f'encode_{datatype}')
+        return encode_func(value)
+    except AttributeError:
         raise ValueError('Unknown attribute type %s' % datatype)
 
-
 def DecodeAttr(datatype, value):
-    if datatype == 'string':
-        return decode_string(value)
-    elif datatype == 'octets':
-        return decode_octets(value)
-    elif datatype == 'integer':
-        return decode_integer(value)
-    elif datatype == 'ipaddr':
-        return decode_ipaddr(value)
-    elif datatype == 'ipv6prefix':
-        return decode_ipv6prefix(value)
-    elif datatype == 'ipv6addr':
-        return decode_ipv6addr(value)
-    elif datatype == 'abinary':
-        return decode_abinary(value)
-    elif datatype == 'signed':
-        return decode_signed(value)
-    elif datatype == 'short':
-        return decode_short(value)
-    elif datatype == 'byte':
-        return decode_byte(value)
-    elif datatype == 'date':
-        return decode_date(value)
-    elif datatype == 'integer64':
-        return decode_integer64(value)
-    else:
+    try:
+        decode_func = getattr(curr_module, f'decode_{datatype}')
+        return decode_func(value)
+    except AttributeError:
         raise ValueError('Unknown attribute type %s' % datatype)
