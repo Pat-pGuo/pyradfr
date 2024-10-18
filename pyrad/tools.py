@@ -196,6 +196,43 @@ def encode_combo_ip(addr):
         return encode_ipaddr(addr)
     return encode_ipv6addr(addr)
 
+def encode_uint8(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer')
+    return struct.pack('!B', num)
+
+def encode_uint16(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer')
+    return struct.pack('!H', num)
+
+def encode_uint32(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer')
+    return struct.pack('!I', num)
+
+def encode_uint64(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer')
+    return struct.pack('!Q', num)
+
+
+def encode_int64(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer')
+    return struct.pack('!q', num)
+
+
 # Decoding functions
 
 def decode_string(orig_str):
@@ -251,6 +288,22 @@ def decode_combo_ip(addr):
     if len(addr) == 4:
         return decode_ipaddr(addr)
     return decode_ipv6addr(addr)
+
+def decode_uint8(num):
+    return (struct.unpack('!B', num))[0]
+
+def decode_uint16(num):
+    return (struct.unpack('!H', num))[0]
+
+def decode_uint32(num):
+    return (struct.unpack('!I', num))[0]
+
+def decode_uint64(num):
+    return (struct.unpack('!Q', num))[0]
+
+def decode_int64(num):
+    return (struct.unpack('!q', num))[0]
+
 
 def EncodeAttr(datatype, value):
     try:
