@@ -139,26 +139,47 @@ def encode_abinary(orig_str):
     return result
 
 
-def encode_signed(num, format='!I'):
+def encode_signed(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer')
-    return struct.pack(format, num)
+    return struct.pack('!i', num)
 
 
-def encode_integer64(num, format='!Q'):
+def encode_integer64(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer64')
-    return struct.pack(format, num)
+    return struct.pack('!Q', num)
 
 
 def encode_date(num):
     if not isinstance(num, int):
         raise TypeError('Can not encode non-integer as date')
     return struct.pack('!I', num)
+
+def encode_integer(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer')
+    return struct.pack('!I', num)
+
+def encode_short(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer')
+    return struct.pack('!H', num)
+
+def encode_byte(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer')
+    return struct.pack('!B', num)
 
 # Decoding functions
 
@@ -190,15 +211,23 @@ def decode_abinary(orig_bytes):
     return orig_bytes
 
 
-def decode_signed(num, format='!I'):
-    return (struct.unpack(format, num))[0]
+def decode_signed(num):
+    return (struct.unpack('!i', num))[0]
 
-def decode_integer64(num, format='!Q'):
-    return (struct.unpack(format, num))[0]
+def decode_integer64(num):
+    return (struct.unpack('!Q', num))[0]
 
 def decode_date(num):
     return (struct.unpack('!I', num))[0]
 
+def decode_integer(num):
+    return (struct.unpack('!I', num))[0]
+
+def decode_short(num):
+    return (struct.unpack('!H', num))[0]
+
+def decode_byte(num):
+    return (struct.unpack('!B', num))[0]
 
 def EncodeAttr(datatype, value):
     if datatype == 'string':
@@ -206,7 +235,7 @@ def EncodeAttr(datatype, value):
     elif datatype == 'octets':
         return encode_octets(value)
     elif datatype == 'integer':
-        return encode_signed(value)
+        return encode_integer(value)
     elif datatype == 'ipaddr':
         return encode_ipaddr(value)
     elif datatype == 'ipv6prefix':
@@ -216,11 +245,11 @@ def EncodeAttr(datatype, value):
     elif datatype == 'abinary':
         return encode_abinary(value)
     elif datatype == 'signed':
-        return encode_signed(value, '!i')
+        return encode_signed(value)
     elif datatype == 'short':
-        return encode_signed(value, '!H')
+        return encode_short(value)
     elif datatype == 'byte':
-        return encode_signed(value, '!B')
+        return encode_byte(value)
     elif datatype == 'date':
         return encode_date(value)
     elif datatype == 'integer64':
@@ -235,7 +264,7 @@ def DecodeAttr(datatype, value):
     elif datatype == 'octets':
         return decode_octets(value)
     elif datatype == 'integer':
-        return decode_signed(value)
+        return decode_integer(value)
     elif datatype == 'ipaddr':
         return decode_ipaddr(value)
     elif datatype == 'ipv6prefix':
@@ -245,11 +274,11 @@ def DecodeAttr(datatype, value):
     elif datatype == 'abinary':
         return decode_abinary(value)
     elif datatype == 'signed':
-        return decode_signed(value, '!i')
+        return decode_signed(value)
     elif datatype == 'short':
-        return decode_signed(value, '!H')
+        return decode_short(value)
     elif datatype == 'byte':
-        return decode_signed(value, '!B')
+        return decode_byte(value)
     elif datatype == 'date':
         return decode_date(value)
     elif datatype == 'integer64':

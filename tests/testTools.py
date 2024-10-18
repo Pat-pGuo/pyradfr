@@ -23,7 +23,7 @@ class EncodingTests(unittest.TestCase):
         self.assertRaises(TypeError, tools.encode_ipaddr, 1)
 
     def testIntegerEncoding(self):
-        self.assertEqual(tools.encode_signed(0x01020304), b'\x01\x02\x03\x04')
+        self.assertEqual(tools.encode_integer(0x01020304), b'\x01\x02\x03\x04')
 
     def testInteger64Encoding(self):
         self.assertEqual(
@@ -31,10 +31,10 @@ class EncodingTests(unittest.TestCase):
         )
 
     def testUnsignedIntegerEncoding(self):
-        self.assertEqual(tools.encode_signed(0xFFFFFFFF), b'\xff\xff\xff\xff')
+        self.assertEqual(tools.encode_integer(0xFFFFFFFF), b'\xff\xff\xff\xff')
 
     def testInvalidIntegerEncodingRaisesTypeError(self):
-        self.assertRaises(TypeError, tools.encode_signed, 'ONE')
+        self.assertRaises(TypeError, tools.encode_integer, 'ONE')
 
     def testDateEncoding(self):
         self.assertEqual(tools.encode_date(0x01020304), b'\x01\x02\x03\x04')
@@ -59,7 +59,7 @@ class EncodingTests(unittest.TestCase):
 
     def testIntegerDecoding(self):
         self.assertEqual(
-                tools.decode_signed(b'\x01\x02\x03\x04'),
+                tools.decode_integer(b'\x01\x02\x03\x04'),
                 0x01020304)
 
     def testInteger64Decoding(self):
