@@ -413,7 +413,7 @@ def decode_vsa(vsa, attributes = None):
         type_code = struct.unpack('!B', vsa[0:1])[0]
         length = struct.unpack('!B', vsa[1:2])[0]
         value = DecodeAttr(convert_code_to_datatype(attributes, type_code),
-                           vsa[2: 2 + length], attributes)
+                           vsa[2:length], attributes)
         tlv_list.append(Tlv(type_code, length, value))
         vsa = vsa[2 + length:]
 
