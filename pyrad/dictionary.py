@@ -89,7 +89,9 @@ DATATYPES = []
 tools_func_list = inspect.getmembers(tools, inspect.isfunction)
 for tools_func in tools_func_list:
     if tools_func[0].startswith('encode_'):
-        DATATYPES.append(tools_func[0][len('encode_'):])
+        DATATYPES.append(
+            # We have to replace '_' with '-' to revert what we do in tools.py
+            tools_func[0][len('encode_'):].replace('_', '-'))
 DATATYPES = frozenset(DATATYPES)
 
 

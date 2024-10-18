@@ -184,6 +184,18 @@ def encode_byte(num):
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!B', num)
 
+def encode_enum(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as integer')
+    return struct.pack('!I', num)
+
+def encode_combo_ip(addr):
+    if len(addr.split('.')) == 4:
+        return encode_ipaddr(addr)
+    return encode_ipv6addr(addr)
+
 # Decoding functions
 
 def decode_string(orig_str):
@@ -232,16 +244,29 @@ def decode_short(num):
 def decode_byte(num):
     return (struct.unpack('!B', num))[0]
 
+def decode_enum(num):
+    return (struct.unpack('!I', num))[0]
+
+def decode_combo_ip(addr):
+    if len(addr) == 4:
+        return decode_ipaddr(addr)
+    return decode_ipv6addr(addr)
+
 def EncodeAttr(datatype, value):
     try:
-        encode_func = getattr(curr_module, f'encode_{datatype}')
+        # We need to replace any '-' in the datatype with '_' since python
+        # doesn't allow '-' in function names. This is used for datatypes
+        # like 'combo-ip'
+        encode_func = getattr(curr_module,
+                              f'encode_{datatype.replace('-', '_')}')
         return encode_func(value)
     except AttributeError:
         raise ValueError('Unknown attribute type %s' % datatype)
 
 def DecodeAttr(datatype, value):
     try:
-        decode_func = getattr(curr_module, f'decode_{datatype}')
+        decode_func = getattr(curr_module,
+                              f'decode_{datatype.replace('-', '_')}')
         return decode_func(value)
     except AttributeError:
         raise ValueError('Unknown attribute type %s' % datatype)
