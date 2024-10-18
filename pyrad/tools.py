@@ -257,6 +257,18 @@ def encode_ifid(addr):
         octets.append(int(field[2:], 16))
     return struct.pack('!8B', *octets)
 
+def encode_ether(addr):
+    if not isinstance(addr, str):
+        raise TypeError('Address has to be a string')
+    return struct.pack('!6B', *map(lambda x: int(x, 16), addr.split(':')))
+
+def encode_bool(num):
+    try:
+        num = int(num)
+    except:
+        raise TypeError('Can not encode non-integer as boolean')
+    return struct.pack('!B', num)
+
 # Decoding functions
 
 def decode_string(orig_str):
@@ -344,7 +356,13 @@ def decode_ifid(addr):
     octets = []
     for i in range(4):
         octets.append(''.join(fields[i * 2: (i + 1) * 2]))
-    return ':'.join(octets).upper()
+    return ':'.join(octets)
+
+def decode_ether(addr):
+    return ':'.join(map('{0:02x}'.format, struct.unpack('!6B', addr)))
+
+def decode_bool(num):
+    return (struct.unpack('!B', num))[0]
 
 def EncodeAttr(datatype, value):
     try:
