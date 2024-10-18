@@ -247,6 +247,16 @@ def encode_ipv4prefix(addr):
     return (struct.pack('!2B', *[0, network.prefixlen]) +
             network.network_address.packed)
 
+def encode_ifid(addr):
+    if not isinstance(addr, str):
+        raise TypeError('Address has to be a string')
+    fields = addr.split(':')
+    octets = []
+    for field in fields:
+        octets.append(int(field[:2], 16))
+        octets.append(int(field[2:], 16))
+    return struct.pack('!8B', *octets)
+
 # Decoding functions
 
 def decode_string(orig_str):
@@ -328,6 +338,13 @@ def decode_ipv4prefix(addr):
                                                    addr))
                                  ).split('.', 2)
     return str(IPv4Network('%s/%s' % (prefix, int(length, 16))))
+
+def decode_ifid(addr):
+    fields = list(map('{0:02x}'.format, struct.unpack('!8B', addr)))
+    octets = []
+    for i in range(4):
+        octets.append(''.join(fields[i * 2: (i + 1) * 2]))
+    return ':'.join(octets).upper()
 
 def EncodeAttr(datatype, value):
     try:
