@@ -6,7 +6,7 @@ from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
 import sys
-from pyrad.datatypes import Evs
+from pyrad.datatypes import Evs, Tlv, Vsa
 
 curr_module = sys.modules[__name__]
 
@@ -277,6 +277,22 @@ def encode_evs(evs: Evs, attributes = None):
                                evs.data, attributes)
     return vendor_id_encoding + attr_code_encoding + data_encoding
 
+def encode_tlv(tlv: Tlv, attributes = None):
+    type_code_encoding = struct.pack('!B', tlv.type_code)
+    length_encoding = struct.pack('!B', tlv.length)
+    value_encoding = EncodeAttr(convert_code_to_datatype(attributes,
+                                                         tlv.type_code),
+                                tlv.value, attributes)
+    return type_code_encoding + length_encoding + value_encoding
+
+def encode_vsa(vsa: Vsa, attributes = None):
+    vendor_id_encoding = struct.pack('!L', vsa.vendor_id)
+    attributes_encoding = b''
+    for tlv in vsa.tlv_list:
+        attributes_encoding += encode_tlv(tlv, attributes)
+
+    return vendor_id_encoding + attributes_encoding
+
 # Decoding functions
 
 def decode_string(orig_str, attributes = None):
@@ -379,6 +395,29 @@ def decode_evs(evs, attributes = None):
                       evs[5:], attributes)
 
     return Evs(vendor_id, attr_code, data)
+
+def decode_tlv(tlv, attributes = None):
+    type_code = struct.unpack('!B', tlv[0:1])[0]
+    length = struct.unpack('!B', tlv[1:2])[0]
+    value = DecodeAttr(convert_code_to_datatype(attributes, type_code),
+                       tlv[2:], attributes)
+
+    return Tlv(type_code, length, value)
+
+def decode_vsa(vsa, attributes = None):
+    vendor_id = struct.unpack('!L', vsa[0:4])[0]
+    vsa = vsa[4:]
+
+    tlv_list = []
+    while vsa:
+        type_code = struct.unpack('!B', vsa[0:1])[0]
+        length = struct.unpack('!B', vsa[1:2])[0]
+        value = DecodeAttr(convert_code_to_datatype(attributes, type_code),
+                           vsa[2: 2 + length], attributes)
+        tlv_list.append(Tlv(type_code, length, value))
+        vsa = vsa[2 + length:]
+
+    return Vsa(vendor_id, tlv_list)
 
 # We need to pass the list of attribute definitions to each encoding/decoding
 # function because nested attributes (evs, tlv, etc.) need to know the
