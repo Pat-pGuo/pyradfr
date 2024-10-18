@@ -76,13 +76,21 @@ from pyrad import tools
 from pyrad import dictfile
 from copy import copy
 import logging
+import inspect
 
 __docformat__ = 'epytext en'
 
-
-DATATYPES = frozenset(['string', 'ipaddr', 'integer', 'date', 'octets',
-                       'abinary', 'ipv6addr', 'ipv6prefix', 'short', 'byte',
-                       'signed', 'ifid', 'ether', 'tlv', 'integer64'])
+# Searches tools.py file for supported datatypes.
+# Since all supported datatypes must have an encoding func, we search for the
+# presence of an encoding function.
+# We do not check for the presence of a decoding function, and assume that it
+# is present
+DATATYPES = []
+tools_func_list = inspect.getmembers(tools, inspect.isfunction)
+for tools_func in tools_func_list:
+    if tools_func[0].startswith('encode_'):
+        DATATYPES.append(tools_func[0][len('encode_'):])
+DATATYPES = frozenset(DATATYPES)
 
 
 class ParseError(Exception):
