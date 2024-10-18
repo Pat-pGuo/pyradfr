@@ -6,7 +6,6 @@ from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
 import sys
-from tkinter.ttk import Label
 from pyrad.datatypes import Evs
 
 curr_module = sys.modules[__name__]
