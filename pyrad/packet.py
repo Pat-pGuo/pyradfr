@@ -528,9 +528,6 @@ class Packet(OrderedDict):
             sub_attributes.setdefault(atype, []).append(data[loc+2:loc+length])
             loc += length
 
-    def _PktDecodeVsaAttributes(self, code, data):
-        pass
-
     def _PktDecodeEvsAttributes(self, code, data):
         pass
 
@@ -582,8 +579,6 @@ class Packet(OrderedDict):
                 self.setdefault(key, []).append(value)
             elif attribute and attribute.type == 'tlv':
                 self._PktDecodeTlvAttribute(key,value)
-            elif attribute and attribute.type == 'vsa':
-                self._PktDecodeVsaAttributes(key, value)
             elif attribute and attribute.type == 'evs':
                 self._PktDecodeEvsAttributes(key, value)
             elif attribute and attribute.type == 'extended':
