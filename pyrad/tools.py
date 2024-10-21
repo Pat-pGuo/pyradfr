@@ -6,7 +6,6 @@ from ipaddress import IPv4Network, IPv6Network
 import struct
 import binascii
 import sys
-from pyrad.datatypes import Evs, Tlv, Vsa
 
 curr_module = sys.modules[__name__]
 
@@ -269,6 +268,18 @@ def encode_bool(num):
         raise TypeError('Can not encode non-integer as boolean')
     return struct.pack('!B', num)
 
+def encode_vsa(*args, **kwargs):
+    raise TypeError('Should not be encoding VSA directly')
+
+def encode_evs(*args, **kwargs):
+    raise TypeError('Should not be encoding EVS directly')
+
+def encode_extended(*args, **kwargs):
+    raise TypeError('Should not be encoding extended directly')
+
+def encode_long_extended(*args, **kwargs):
+    raise TypeError('Should not be encoding long extended directly')
+
 # Decoding functions
 
 def decode_string(orig_str):
@@ -363,6 +374,18 @@ def decode_ether(addr):
 
 def decode_bool(num):
     return (struct.unpack('!B', num))[0]
+
+def decode_vsa(*args, **kwargs):
+    raise TypeError('Should not be decoding VSA directly')
+
+def decode_evs(*args, **kwargs):
+    raise TypeError('Should not be decoding EVS directly')
+
+def decode_extended(*args, **kwargs):
+    raise TypeError('Should not be decoding extended directly')
+
+def decode_long_extended(*args, **kwargs):
+    raise TypeError('Should not be decoding long extended directly')
 
 # We need to pass the list of attribute definitions to each encoding/decoding
 # function because nested attributes (evs, tlv, etc.) need to know the
