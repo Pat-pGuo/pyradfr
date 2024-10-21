@@ -100,6 +100,9 @@ class Packet(OrderedDict):
         self.message_authenticator = None
         self.raw_packet = None
 
+        self.long_type = None
+        self.long_buffer = b''
+
         if 'dict' in attributes:
             self.dict = attributes['dict']
 
@@ -529,13 +532,37 @@ class Packet(OrderedDict):
             loc += length
 
     def _PktDecodeEvsAttributes(self, code, data):
-        pass
+        vendor, vtype = struct.unpack('!LB', data[0:4])[0:2]
+        attribute = self.dict.attributes.get(self._DecodeKey((vendor, vtype)))
+        if attribute and attribute.type == 'tlv':
+            self._PktDecodeTlvAttribute((vendor, vtype), data[4:])
+        else:
+            self.setdefault((vendor, vtype), []).append(data[4:])
 
     def _PktDecodeExtendedAttribute(self, code, data):
-        pass
+        extended_type = struct.unpack('!B', data[0:1])[0]
+        attribute = self.dict.attributes.get(self._DecodeKey((code, extended_type)))
+        if attribute:
+            self.setdefault((code, extended_type), []).append(data[1:])
 
     def _PktDecodeLongExtendedAttribute(self, code, data):
-        pass
+        extended_type, flags = struct.unpack('!BB', data[0:2])[0:2]
+        attribute = self.dict.attributes.get(self._DecodeKey((code, extended_type)))
+        if attribute:
+            # Entering a new long sequence
+            if self.long_type is None:
+                self.long_type = (code, extended_type)
+                self.long_buffer = b''
+            elif self.long_type != (code, extended_type):
+                raise TypeError(f'Type mismatch between long sequences! '
+                                f'Expected {self.long_type}, '
+                                f'got {(code, extended_type)}')
+            self.long_buffer += data[2:]
+
+            # check if long sequence has ended
+            if flags < 128:
+                self.setdefault((code, extended_type), []).append(data[2:])
+                self.long_type = None
 
     def DecodePacket(self, packet):
         """Initialize the object from raw packet data.  Decode a packet as
