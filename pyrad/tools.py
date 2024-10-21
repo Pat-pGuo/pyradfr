@@ -13,7 +13,7 @@ curr_module = sys.modules[__name__]
 
 # Encoding functions
 
-def encode_string(origstr, attributes = None):
+def encode_string(origstr):
     if len(origstr) > 253:
         raise ValueError('Can only encode strings of <= 253 characters')
     if isinstance(origstr, str):
@@ -22,7 +22,7 @@ def encode_string(origstr, attributes = None):
         return origstr
 
 
-def encode_octets(octetstring, attributes = None):
+def encode_octets(octetstring):
     # Check for max length of the hex encoded with 0x prefix, as a sanity check
     if len(octetstring) > 508:
         raise ValueError('Can only encode strings of <= 253 characters')
@@ -45,26 +45,26 @@ def encode_octets(octetstring, attributes = None):
     return encoded_octets
 
 
-def encode_ipaddr(addr, attributes = None):
+def encode_ipaddr(addr):
     if not isinstance(addr, str):
         raise TypeError('Address has to be a string')
     return IPv4Address(addr).packed
 
 
-def encode_ipv6prefix(addr, attributes = None):
+def encode_ipv6prefix(addr):
     if not isinstance(addr, str):
         raise TypeError('IPv6 Prefix has to be a string')
     ip = IPv6Network(addr)
     return struct.pack('2B', *[0, ip.prefixlen]) + ip.ip.packed
 
 
-def encode_ipv6addr(addr, attributes = None):
+def encode_ipv6addr(addr):
     if not isinstance(addr, str):
         raise TypeError('IPv6 Address has to be a string')
     return IPv6Address(addr).packed
 
 
-def encode_abinary(orig_str, attributes = None):
+def encode_abinary(orig_str):
     """
     Format: List of type=value pairs separated by spaces.
 
@@ -143,7 +143,7 @@ def encode_abinary(orig_str, attributes = None):
     return result
 
 
-def encode_signed(num, attributes = None):
+def encode_signed(num):
     try:
         num = int(num)
     except:
@@ -151,7 +151,7 @@ def encode_signed(num, attributes = None):
     return struct.pack('!i', num)
 
 
-def encode_integer64(num, attributes = None):
+def encode_integer64(num):
     try:
         num = int(num)
     except:
@@ -159,66 +159,66 @@ def encode_integer64(num, attributes = None):
     return struct.pack('!Q', num)
 
 
-def encode_date(num, attributes = None):
+def encode_date(num):
     if not isinstance(num, int):
         raise TypeError('Can not encode non-integer as date')
     return struct.pack('!I', num)
 
-def encode_integer(num, attributes = None):
+def encode_integer(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!I', num)
 
-def encode_short(num, attributes = None):
+def encode_short(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!H', num)
 
-def encode_byte(num, attributes = None):
+def encode_byte(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!B', num)
 
-def encode_enum(num, attributes = None):
+def encode_enum(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!I', num)
 
-def encode_combo_ip(addr, attributes = None):
+def encode_combo_ip(addr):
     if len(addr.split('.')) == 4:
         return encode_ipaddr(addr)
     return encode_ipv6addr(addr)
 
-def encode_uint8(num, attributes = None):
+def encode_uint8(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!B', num)
 
-def encode_uint16(num, attributes = None):
+def encode_uint16(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!H', num)
 
-def encode_uint32(num, attributes = None):
+def encode_uint32(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!I', num)
 
-def encode_uint64(num, attributes = None):
+def encode_uint64(num):
     try:
         num = int(num)
     except:
@@ -226,28 +226,28 @@ def encode_uint64(num, attributes = None):
     return struct.pack('!Q', num)
 
 
-def encode_int64(num, attributes = None):
+def encode_int64(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as integer')
     return struct.pack('!q', num)
 
-def encode_float32(num, attributes = None):
+def encode_float32(num):
     try:
         num = float(num)
     except:
         raise TypeError('Can not encode non-float as float')
     return struct.pack('!f', num)
 
-def encode_ipv4prefix(addr, attributes = None):
+def encode_ipv4prefix(addr):
     if not isinstance(addr, str):
         raise TypeError('Address has to be a string')
     network = IPv4Network(addr)
     return (struct.pack('!2B', *[0, network.prefixlen]) +
             network.network_address.packed)
 
-def encode_ifid(addr, attributes = None):
+def encode_ifid(addr):
     if not isinstance(addr, str):
         raise TypeError('Address has to be a string')
     fields = addr.split(':')
@@ -257,117 +257,93 @@ def encode_ifid(addr, attributes = None):
         octets.append(int(field[2:], 16))
     return struct.pack('!8B', *octets)
 
-def encode_ether(addr, attributes = None):
+def encode_ether(addr):
     if not isinstance(addr, str):
         raise TypeError('Address has to be a string')
     return struct.pack('!6B', *map(lambda x: int(x, 16), addr.split(':')))
 
-def encode_bool(num, attributes = None):
+def encode_bool(num):
     try:
         num = int(num)
     except:
         raise TypeError('Can not encode non-integer as boolean')
     return struct.pack('!B', num)
 
-def encode_evs(evs: Evs, attributes = None):
-    vendor_id_encoding = struct.pack('!L', evs.vendor_id)
-    attr_code_encoding = struct.pack('!B', evs.attr_code)
-    data_encoding = EncodeAttr(convert_code_to_datatype(attributes,
-                                                        evs.attr_code),
-                               evs.data, attributes)
-    return vendor_id_encoding + attr_code_encoding + data_encoding
-
-def encode_tlv(tlv: Tlv, attributes = None):
-    type_code_encoding = struct.pack('!B', tlv.type_code)
-    length_encoding = struct.pack('!B', tlv.length)
-    value_encoding = EncodeAttr(convert_code_to_datatype(attributes,
-                                                         tlv.type_code),
-                                tlv.value, attributes)
-    return type_code_encoding + length_encoding + value_encoding
-
-def encode_vsa(vsa: Vsa, attributes = None):
-    vendor_id_encoding = struct.pack('!L', vsa.vendor_id)
-    attributes_encoding = b''
-    for tlv in vsa.tlv_list:
-        attributes_encoding += encode_tlv(tlv, attributes)
-
-    return vendor_id_encoding + attributes_encoding
-
 # Decoding functions
 
-def decode_string(orig_str, attributes = None):
+def decode_string(orig_str):
     return orig_str.decode('utf-8')
 
 
-def decode_octets(orig_bytes, attributes = None):
+def decode_octets(orig_bytes):
     return orig_bytes
 
 
-def decode_ipaddr(addr, attributes = None):
+def decode_ipaddr(addr):
     return '.'.join(map(str, struct.unpack('BBBB', addr)))
 
 
-def decode_ipv6prefix(addr, attributes = None):
+def decode_ipv6prefix(addr):
     addr = addr + b'\x00' * (18-len(addr))
     _, length, prefix = ':'.join(map('{0:x}'.format, struct.unpack('!BB'+'H'*8, addr))).split(":", 2)
     return str(IPv6Network("%s/%s" % (prefix, int(length, 16))))
 
 
-def decode_ipv6addr(addr, attributes = None):
+def decode_ipv6addr(addr):
     addr = addr + b'\x00' * (16-len(addr))
     prefix = ':'.join(map('{0:x}'.format, struct.unpack('!'+'H'*8, addr)))
     return str(IPv6Address(prefix))
 
 
-def decode_abinary(orig_bytes, attributes = None):
+def decode_abinary(orig_bytes):
     return orig_bytes
 
 
-def decode_signed(num, attributes = None):
+def decode_signed(num):
     return (struct.unpack('!i', num))[0]
 
-def decode_integer64(num, attributes = None):
+def decode_integer64(num):
     return (struct.unpack('!Q', num))[0]
 
-def decode_date(num, attributes = None):
+def decode_date(num):
     return (struct.unpack('!I', num))[0]
 
-def decode_integer(num, attributes = None):
+def decode_integer(num):
     return (struct.unpack('!I', num))[0]
 
-def decode_short(num, attributes = None):
+def decode_short(num):
     return (struct.unpack('!H', num))[0]
 
-def decode_byte(num, attributes = None):
+def decode_byte(num):
     return (struct.unpack('!B', num))[0]
 
-def decode_enum(num, attributes = None):
+def decode_enum(num):
     return (struct.unpack('!I', num))[0]
 
-def decode_combo_ip(addr, attributes = None):
+def decode_combo_ip(addr):
     if len(addr) == 4:
         return decode_ipaddr(addr)
     return decode_ipv6addr(addr)
 
-def decode_uint8(num, attributes = None):
+def decode_uint8(num):
     return (struct.unpack('!B', num))[0]
 
-def decode_uint16(num, attributes = None):
+def decode_uint16(num):
     return (struct.unpack('!H', num))[0]
 
-def decode_uint32(num, attributes = None):
+def decode_uint32(num):
     return (struct.unpack('!I', num))[0]
 
-def decode_uint64(num, attributes = None):
+def decode_uint64(num):
     return (struct.unpack('!Q', num))[0]
 
-def decode_int64(num, attributes = None):
+def decode_int64(num):
     return (struct.unpack('!q', num))[0]
 
-def decode_float32(num, attributes = None):
+def decode_float32(num):
     return (struct.unpack('!f', num))[0]
 
-def decode_ipv4prefix(addr, attributes = None):
+def decode_ipv4prefix(addr):
     addr = addr + b'\x00' * (6 - len(addr))
     _, length, prefix = '.'.join(map('{0:x}'.format,
                                      struct.unpack('!BB' + 'B' * 4,
@@ -375,69 +351,38 @@ def decode_ipv4prefix(addr, attributes = None):
                                  ).split('.', 2)
     return str(IPv4Network('%s/%s' % (prefix, int(length, 16))))
 
-def decode_ifid(addr, attributes = None):
+def decode_ifid(addr):
     fields = list(map('{0:02x}'.format, struct.unpack('!8B', addr)))
     octets = []
     for i in range(4):
         octets.append(''.join(fields[i * 2: (i + 1) * 2]))
     return ':'.join(octets)
 
-def decode_ether(addr, attributes = None):
+def decode_ether(addr):
     return ':'.join(map('{0:02x}'.format, struct.unpack('!6B', addr)))
 
-def decode_bool(num, attributes = None):
+def decode_bool(num):
     return (struct.unpack('!B', num))[0]
-
-def decode_evs(evs, attributes = None):
-    vendor_id = struct.unpack('!L', evs[0:4])[0]
-    attr_code = struct.unpack('!B', evs[4:5])[0]
-    data = DecodeAttr(convert_code_to_datatype(attributes, attr_code),
-                      evs[5:], attributes)
-
-    return Evs(vendor_id, attr_code, data)
-
-def decode_tlv(tlv, attributes = None):
-    type_code = struct.unpack('!B', tlv[0:1])[0]
-    length = struct.unpack('!B', tlv[1:2])[0]
-    value = DecodeAttr(convert_code_to_datatype(attributes, type_code),
-                       tlv[2:], attributes)
-
-    return Tlv(type_code, length, value)
-
-def decode_vsa(vsa, attributes = None):
-    vendor_id = struct.unpack('!L', vsa[0:4])[0]
-    vsa = vsa[4:]
-
-    tlv_list = []
-    while vsa:
-        type_code = struct.unpack('!B', vsa[0:1])[0]
-        length = struct.unpack('!B', vsa[1:2])[0]
-        value = DecodeAttr(convert_code_to_datatype(attributes, type_code),
-                           vsa[2:length], attributes)
-        tlv_list.append(Tlv(type_code, length, value))
-        vsa = vsa[2 + length:]
-
-    return Vsa(vendor_id, tlv_list)
 
 # We need to pass the list of attribute definitions to each encoding/decoding
 # function because nested attributes (evs, tlv, etc.) need to know the
 # convertion between code <-> datatype
-def EncodeAttr(datatype, value, attributes = None):
+def EncodeAttr(datatype, value):
     try:
         # We need to replace any '-' in the datatype with '_' since python
         # doesn't allow '-' in function names. This is used for datatypes
         # like 'combo-ip'
         encode_func = getattr(curr_module,
                               f'encode_{datatype.replace('-', '_')}')
-        return encode_func(value, attributes)
+        return encode_func(value)
     except AttributeError:
         raise ValueError('Unknown attribute type %s' % datatype)
 
-def DecodeAttr(datatype, value, attributes = None):
+def DecodeAttr(datatype, value):
     try:
         decode_func = getattr(curr_module,
                               f'decode_{datatype.replace('-', '_')}')
-        return decode_func(value, attributes)
+        return decode_func(value)
     except AttributeError:
         raise ValueError('Unknown attribute type %s' % datatype)
 

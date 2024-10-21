@@ -528,6 +528,18 @@ class Packet(OrderedDict):
             sub_attributes.setdefault(atype, []).append(data[loc+2:loc+length])
             loc += length
 
+    def _PktDecodeVsaAttributes(self, code, data):
+        pass
+
+    def _PktDecodeEvsAttributes(self, code, data):
+        pass
+
+    def _PktDecodeExtendedAttribute(self, code, data):
+        pass
+
+    def _PktDecodeLongExtendedAttribute(self, code, data):
+        pass
+
     def DecodePacket(self, packet):
         """Initialize the object from raw packet data.  Decode a packet as
         received from the network and decode it.
@@ -570,6 +582,14 @@ class Packet(OrderedDict):
                 self.setdefault(key, []).append(value)
             elif attribute and attribute.type == 'tlv':
                 self._PktDecodeTlvAttribute(key,value)
+            elif attribute and attribute.type == 'vsa':
+                self._PktDecodeVsaAttributes(key, value)
+            elif attribute and attribute.type == 'evs':
+                self._PktDecodeEvsAttributes(key, value)
+            elif attribute and attribute.type == 'extended':
+                self._PktDecodeExtendedAttribute(key,value)
+            elif attribute and attribute.type == 'long-extended':
+                self._PktDecodeLongExtendedAttribute(key,value)
             else:
                 self.setdefault(key, []).append(value)
 
